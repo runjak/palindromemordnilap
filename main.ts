@@ -98,6 +98,20 @@ const spellChars = (counts: CharCounts): string => {
   }`;
 };
 
+const equalCounts = (count1: CharCounts, count2: CharCounts): boolean => {
+  if (count1.size !== count2.size) {
+    return false;
+  }
+
+  for (let key of count1.keys()) {
+    if (count1.get(key) !== count2.get(key)) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 const reverse = (message: string): string =>
   message.split("").reverse().join("");
 
