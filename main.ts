@@ -82,6 +82,7 @@ const countChars = (message: string): CharCounts => {
   let counts = new Map<string, number>();
 
   for (let char of chars) {
+    char = char.toLowerCase();
     counts.set(char, 1 + (counts.get(char) ?? 0));
   }
 
@@ -97,6 +98,11 @@ const spellChars = (counts: CharCounts): string => {
     parts[parts.length - 1]
   }`;
 };
+
+const spellInstructions = (counts: CharCounts): string =>
+  `With that - please write down ${spellChars(
+    counts
+  )}, in a palindromic sequence whose second half runs thus:`;
 
 const equalCounts = (count1: CharCounts, count2: CharCounts): boolean => {
   if (count1.size !== count2.size) {
@@ -116,4 +122,16 @@ const reverse = (message: string): string =>
   message.split("").reverse().join("");
 
 const toPalindrome = (message: string): string =>
-  `${message} ${reverse(message)}`;
+  `${message}\n${reverse(message)}`;
+
+const fixpoint = (prefix: string): string => {
+  let message = toPalindrome(
+    `${prefix} ${spellInstructions(countChars(prefix))}`
+  );
+
+  // FIXME search fixpoint here.
+
+  return message;
+};
+
+console.log(fixpoint("Dear Gridfuse, I enjoyed our time together."));
