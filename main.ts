@@ -47,7 +47,7 @@ const spellNumber = (n: number) => {
   }
 
   if (n === 0) {
-    return "zero";
+    return "";
   }
 
   if (n < 10) {
@@ -124,14 +124,33 @@ const reverse = (message: string): string =>
 const toPalindrome = (message: string): string =>
   `${message}\n${reverse(message)}`;
 
-const fixpoint = (prefix: string): string => {
+const fixpoint = (prefix: string): [string, boolean] => {
   let message = toPalindrome(
     `${prefix} ${spellInstructions(countChars(prefix))}`
   );
+  let valid = false;
 
-  // FIXME search fixpoint here.
+  // 1_000_000 runs about a minute
+  const minute = 1_000_000;
+  for (let i = 0; i < 30 * minute; i++) {
+    const nextCount = countChars(message);
+    const nextMessage = toPalindrome(
+      `${prefix} ${spellInstructions(nextCount)}`
+    );
 
-  return message;
+    if (nextMessage === message) {
+      valid = true;
+      break;
+    }
+
+    message = nextMessage;
+  }
+
+  return [message, valid];
 };
 
-console.log(fixpoint("Dear Gridfuse, I enjoyed our time together."));
+console.log(
+  fixpoint(
+    "Dear Gridfuse, I enjoyed our time together. I hope you'll do well. Love ya."
+  )
+);
