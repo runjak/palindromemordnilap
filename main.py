@@ -125,7 +125,39 @@ def get_alphabet_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: i
     
   return alphabet_vectors
 
+# FIXME decide: do I wanna say letter or char?
+
+def experiment_fixpoint(prefix: str) -> Vector:
+  alphabet = get_alphabet(prefix)
+  base_vector = get_base_vector(prefix)
+
+  letter_counts = {letter: base_vector.get(letter, 0) for letter in alphabet}
+  letter_vectors = {letter: scale_vector(count_chars(spell_char(letter, letter_counts[letter])), 2) for letter in alphabet}
+  
+  letter_sums = sum_vectors(base_vector, *letter_vectors.values())
+  
+  while True:
+    for letter, letter_sum in letter_sums.items():
+      letter_count = letter_counts[letter]
+      
+      if letter_sum == letter_count:
+        continue
+
+      letter_vector = scale_vector(count_chars(spell_char(letter, letter_sum)), 2)
+      letter_sums = sum_vectors(letter_sums, scale_vector(letter_vectors[letter], -1), letter_vector)
+      letter_counts[letter] = letter_sum
+      letter_vectors[letter] = letter_vector
+      break
+    else: break
+  
+  return letter_sums
+
 
 print(f"Alphabet: {get_alphabet("Alphabet:")}")
 print(get_base_vector("Alphabet:"))
 print(spell_output_counts("Alphabet:", []))
+
+print("experiment_fixpoint('test')")
+test_vector = experiment_fixpoint('test')
+print(test_vector)
+print(spell_output_vector('test', test_vector))
