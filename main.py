@@ -149,8 +149,3 @@ def experiment_fixpoint(prefix: str) -> Vector:
     else: break
   
   return char_sums
-
-print("experiment_fixpoint('test')")
-test_vector = experiment_fixpoint('test')
-print(test_vector)
-print(spell_output_vector('test', test_vector))
