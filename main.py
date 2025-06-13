@@ -1,39 +1,6 @@
-single_digit = [
-  "",
-  "one",
-  "two",
-  "three",
-  "four",
-  "five",
-  "six",
-  "seven",
-  "eight",
-  "nine",
-]
-
-double_digit = [
-  "ten",
-  "eleven",
-  "twelve",
-  "thirteen",
-  "fourteen",
-  "fifteen",
-  "sixteen",
-  "seventeen",
-  "eighteen",
-  "nineteen",
-]
-
-below_hundred = [
-  "twenty",
-  "thirty",
-  "forty",
-  "fifty",
-  "sixty",
-  "seventy",
-  "eighty",
-  "ninety",
-]
+single_digit = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
+double_digit = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",]
+below_hundred = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",]
 
 hundred = "hundred"
 thousand = "thousand"
@@ -61,6 +28,7 @@ def spell_chars(chars: CharCounts) -> str:
   return f"{", ".join(parts)} and {last}"
 
 def spell_instructions(chars: CharCounts) -> str:
+  return f"Write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
   return f"With that - please write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
 
 def spell_output_counts(prefix: str, chars: CharCounts) -> str:
@@ -116,16 +84,16 @@ def count_chars(s: str) -> Vector:
 def get_base_vector(prefix: str) -> Vector:
   return count_chars(spell_output_counts(prefix, []))
 
-def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, dict[int, Vector]]:
+def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, list[(int, Vector)]]:
   char_vectors = {}
 
   for char in alphabet:
     lower_limit = base_vector.get(char, 0)
-    char_vectors[char] = {
+    char_vectors[char] = [
       # we scale by 2 because of the palindrome condition
-      count: scale_vector(count_chars(spell_char(char, count)), 2)
+      (count, scale_vector(count_chars(spell_char(char, count)), 2))
       # we step by 2 because of the palindrome condition
-      for count in range(lower_limit, upper_limit, 2)}
+      for count in range(lower_limit, upper_limit, 2)]
     
   return char_vectors
 
@@ -153,3 +121,46 @@ def experiment_fixpoint(prefix: str) -> Vector:
     else: break
   
   return char_sums
+
+import random
+
+def experiment_weights(prefix: str, upper_limit: int, sample_count: int, generation_count: int) -> Vector:
+  alphabet = get_alphabet(prefix)
+  base_vector = get_base_vector(prefix)
+  char_vectors = get_char_vectors(alphabet, base_vector, upper_limit)
+
+  def normalise_weights(ps: list[float]) -> list[float]:
+    s = sum(list)
+    return [p/s for p in ps]
+  
+  char_weights = {char: normalise_weights([1] * len(vectors)) for char, vectors in char_vectors.items()}
+
+  def choose_char_vectors() -> list[(str, int, Vector)]:
+    char_vectors = []
+    for char, population in char_vectors.items():
+      [(count, vector)] = random.choices(population, char_weights, k=1)
+      char_vectors.append((char, count, vector))
+    return char_vectors
+  
+  def choice_error(choice: list[(str, int, Vector)]) -> int:
+    a = sum_vectors(base_vector, *[vector for (_, _, vector) in choice])
+    b = sum_vectors(base_vector, {char: count for (char, count, _) in choice})
+    return manhattan_distance(a, b)
+  
+  def sample_errors() -> Vector:
+    errors = {}
+    
+    for _ in range(sample_count):
+      choice = choose_char_vectors()
+      error = choice_error(choice)
+      for (char, _, _) in choice:
+          errors[char] = error + errors.get(char, 0)
+
+    return errors
+  
+  def generate():
+    for _ in range(generation_count):
+      errors = sample_errors()
+      None # FIXME do something to the weights here.
+
+  # FIXME we will continue down here.
