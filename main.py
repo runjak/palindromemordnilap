@@ -63,7 +63,7 @@ def spell_chars(chars: CharCounts) -> str:
 def spell_instructions(chars: CharCounts) -> str:
   return f"With that - please write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
 
-def spell_output(prefix: str, chars: CharCounts) -> str:
+def spell_output_counts(prefix: str, chars: CharCounts) -> str:
   start = f"{prefix} {spell_instructions(chars)}"
   return f"{start}\n{start[::-1]}"
 
@@ -87,6 +87,12 @@ def alphabet_to_dict(alphabet: Alphabet) -> dict[str, int]:
 
 type Vector = dict[str, int]
 
+def vector_to_char_counts(vector: Vector) -> CharCounts:
+  return [(k, vector[k]) for k in sorted(vector.keys())]
+
+def spell_output_vector(prefix: str, vector: Vector) -> str:
+  return spell_output_counts(prefix, vector_to_char_counts(vector))
+
 def count_chars(s: str) -> Vector:
   counts = {}
   for c in "".join(s.split()):
@@ -94,7 +100,7 @@ def count_chars(s: str) -> Vector:
   return counts
 
 def get_base_vector(prefix: str) -> Vector:
-  return count_chars(spell_output(prefix, []))
+  return count_chars(spell_output_counts(prefix, []))
 
 def get_alphabet_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, dict[int, Vector]]:
   alphabet_vectors = {}
@@ -105,6 +111,13 @@ def get_alphabet_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: i
     
   return alphabet_vectors
 
+def sum_vectors(*vectors: list[Vector]) -> Vector:
+  sum = {}
+  for vector in vectors:
+    for k, v in vector.items():
+      sum[k] = v + sum.get(k, 0)
+  return sum
+
 print(f"Alphabet: {get_alphabet("Alphabet:")}")
 print(get_base_vector("Alphabet:"))
-print(spell_output("Alphabet:", []))
+print(spell_output_counts("Alphabet:", []))
