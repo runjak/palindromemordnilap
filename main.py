@@ -12,10 +12,10 @@ def spell_number(n: int) -> str:
   if n < 10: return single_digit[n]
   if n < 20: return double_digit[n - 10]
   if n < 100: return f"{below_hundred[(n - (n % 10)) // 10 - 2]} {spell_number(n % 10)}"
-  if n < 1000: return f"{single_digit[n // 100]} {hundred} {spell_number(n % 100)}"
-  if n < 1000000: return f"{spell_number(n // 1000)} {thousand} {spell_number(n % 1000)}"
-  if n < 1000000000: return f"{spell_number(n // 1000000)} {million} {spell_number(n % 1000000)}"
-  return f"{spell_number(n // 1000000000)} {billion} ${spell_number(n % 1000000000)}"
+  if n < 1_000: return f"{single_digit[n // 100]} {hundred} {spell_number(n % 100)}"
+  if n < 1_000_000: return f"{spell_number(n // 1_000)} {thousand} {spell_number(n % 1_000)}"
+  if n < 1_000_000_000: return f"{spell_number(n // 1_000_000)} {million} {spell_number(n % 1_000_000)}"
+  return f"{spell_number(n // 1_000_000_000)} {billion} ${spell_number(n % 1_000_000_000)}"
 
 def spell_char(c: str, n: int) -> str:
   return f"{spell_number(n)} ❛{c}❜s"
