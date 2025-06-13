@@ -99,6 +99,8 @@ def count_chars(s: str) -> Vector:
 def get_base_vector(prefix: str) -> Vector:
   return count_chars(spell_output_counts(prefix, []))
 
+max_change_vector = scale_vector(max_vectors(*[count_chars(spell_number(n)) for n in range(100_000)]), 2)
+
 def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, list[(int, Vector)]]:
   char_vectors = {}
 
