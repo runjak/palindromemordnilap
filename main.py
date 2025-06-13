@@ -53,19 +53,23 @@ def spell_number(n: int) -> str:
 def spell_char(c: str, n: int) -> str:
   return f"{spell_number(n)} ❛{c}❜s"
 
-def spell_chars(chars: list[(str, int)]) -> str:
+type CharCounts = list[(str, int)]
+
+def spell_chars(chars: CharCounts) -> str:
   spelled = [spell_char(c, n) if n > 0 else "" for (c, n) in chars]
   [*parts, last] = spelled if len(spelled) > 0 else [""]
   return f"{", ".join(parts)} and {last}"
 
-def spell_instructions(chars: list[(str, int)]) -> str:
+def spell_instructions(chars: CharCounts) -> str:
   return f"With that - please write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
 
-def spell_output(prefix: str, chars: list[(str, int)]) -> str:
+def spell_output(prefix: str, chars: CharCounts) -> str:
   start = f"{prefix} {spell_instructions(chars)}"
   return f"{start}\n{start[::-1]}"
 
-def get_alphabet(prefix: str) -> list[str]:
+type Alphabet = list[str]
+
+def get_alphabet(prefix: str) -> Alphabet:
   return sorted(list(set(
     "".join(single_digit + double_digit + below_hundred) 
       + hundred 
@@ -78,16 +82,18 @@ def get_alphabet(prefix: str) -> list[str]:
       + prefix
     ) - set(' ')))
 
-def alphabet_to_dict(alphabet: list[str]) -> dict[str, int]:
+def alphabet_to_dict(alphabet: Alphabet) -> dict[str, int]:
   return {k: v for (v, k) in enumerate(alphabet)}
 
-def count_chars(s: str) -> list[(str, int)]:
+def count_chars(s: str) -> CharCounts:
   counts = {}
   for c in "".join(s.split()):
     counts[c] = 1 + counts.get(c, 0)
   return counts
 
-def get_base_vector(prefix: str) -> list[int]:
+type Vector = list[int]
+
+def get_base_vector(prefix: str) -> Vector:
   alphabet = get_alphabet(prefix)
   alphabet_dict = alphabet_to_dict(alphabet)
 
