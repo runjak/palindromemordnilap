@@ -64,11 +64,11 @@ def alphabet_to_dict(alphabet: Alphabet) -> dict[str, int]:
 type Vector = dict[str, int]
 
 def sum_vectors(*vectors: list[Vector]) -> Vector:
-  sum = {}
+  result = {}
   for vector in vectors:
     for k, v in vector.items():
-      sum[k] = v + sum.get(k, 0)
-  return sum
+      result[k] = v + result.get(k, 0)
+  return result
 
 def scale_vector(vector: Vector, factor: int) -> Vector:
   return {k: v * factor for k, v in vector.items()}
@@ -79,6 +79,13 @@ def manhattan_distance(a: Vector, b: Vector) -> int:
 
 def vector_to_char_counts(vector: Vector) -> CharCounts:
   return [(k, vector[k]) for k in sorted(vector.keys())]
+
+def max_vectors(*vectors: list[Vector]) -> Vector:
+  result = {}
+  for vector in vectors:
+    for k, v in vector.items():
+      result[k] = max(v, result.get(k, 0))
+  return result
 
 def spell_output_vector(prefix: str, vector: Vector) -> str:
   return spell_output_counts(prefix, vector_to_char_counts(vector))
