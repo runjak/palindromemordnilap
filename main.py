@@ -37,6 +37,14 @@ def spell_output_counts(prefix: str, chars: CharCounts) -> str:
 
 type Alphabet = list[str]
 
+number_alphabet: Alphabet = sorted(list(set(
+  "".join(single_digit + double_digit + below_hundred)
+  + hundred
+  + thousand
+  + million
+  + billion
+  + spell_char('', 0))))
+
 def get_alphabet(prefix: str) -> Alphabet:
   return sorted(list(set(
     "".join(single_digit + double_digit + below_hundred) 
