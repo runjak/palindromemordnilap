@@ -87,6 +87,16 @@ def alphabet_to_dict(alphabet: Alphabet) -> dict[str, int]:
 
 type Vector = dict[str, int]
 
+def sum_vectors(*vectors: list[Vector]) -> Vector:
+  sum = {}
+  for vector in vectors:
+    for k, v in vector.items():
+      sum[k] = v + sum.get(k, 0)
+  return sum
+
+def scale_vector(vector: Vector, factor: int) -> Vector:
+  return {k: v * factor for k, v in vector.items()}
+
 def vector_to_char_counts(vector: Vector) -> CharCounts:
   return [(k, vector[k]) for k in sorted(vector.keys())]
 
@@ -107,16 +117,14 @@ def get_alphabet_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: i
 
   for letter in alphabet:
     lower_limit = base_vector.get(letter, 0)
-    alphabet_vectors[letter] = {count: count_chars(spell_char(letter, count)) for count in range(lower_limit, upper_limit, 2)}
+    alphabet_vectors[letter] = {
+      # we scale by 2 because of the palindrome condition
+      count: scale_vector(count_chars(spell_char(letter, count)), 2)
+      # we step by 2 because of the palindrome condition
+      for count in range(lower_limit, upper_limit, 2)}
     
   return alphabet_vectors
 
-def sum_vectors(*vectors: list[Vector]) -> Vector:
-  sum = {}
-  for vector in vectors:
-    for k, v in vector.items():
-      sum[k] = v + sum.get(k, 0)
-  return sum
 
 print(f"Alphabet: {get_alphabet("Alphabet:")}")
 print(get_base_vector("Alphabet:"))
