@@ -43,7 +43,7 @@ changing_alphabet: Alphabet = sorted(list(set(
   + thousand
   + million
   + billion
-  + spell_char('', 0))))
+  + spell_char('', 0)) - set(' ')))
 
 def get_alphabet(prefix: str) -> Alphabet:
   return sorted(list(set(
@@ -100,6 +100,10 @@ def get_base_vector(prefix: str) -> Vector:
   return count_chars(spell_output_counts(prefix, []))
 
 max_change_vector = scale_vector(max_vectors(*[count_chars(spell_number(n)) for n in range(100_000)]), 2)
+
+delta_space: dict[str, list[int]] = {
+    char: list(range(0, max_change_vector.get(char, 0) + 1, 2))
+    for char in changing_alphabet}
 
 def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, list[(int, Vector)]]:
   char_vectors = {}
