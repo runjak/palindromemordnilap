@@ -97,6 +97,10 @@ def sum_vectors(*vectors: list[Vector]) -> Vector:
 def scale_vector(vector: Vector, factor: int) -> Vector:
   return {k: v * factor for k, v in vector.items()}
 
+def manhattan_distance(a: Vector, b: Vector) -> int:
+  keys = set(a.keys()) + set(b.keys())
+  return sum([abs(a[k] - b[k]) for k in keys])
+
 def vector_to_char_counts(vector: Vector) -> CharCounts:
   return [(k, vector[k]) for k in sorted(vector.keys())]
 
