@@ -44,11 +44,11 @@ def spell_number(n: int) -> str:
   if n <= 0: return ''
   if n < 10: return single_digit[n]
   if n < 20: return double_digit[n - 10]
-  if n < 100: return f"{below_hundred[(n - (n % 10)) / 10 - 2]} {spell_number(n % 10)}"
-  if n < 1000: return f"{single_digit[n / 100]} {hundred} {spell_number(n % 100)}"
-  if n < 1000000: return f"{spell_number(n / 1000)} {thousand} {spell_number(n % 1000)}"
-  if n < 1000000000: return f"{spell_number(n / 1000000)} {million} {spell_number(n % 1000000)}"
-  return f"{spell_number(n / 1000000000)} {billion} ${spell_number(n % 1000000000)}"
+  if n < 100: return f"{below_hundred[(n - (n % 10)) // 10 - 2]} {spell_number(n % 10)}"
+  if n < 1000: return f"{single_digit[n // 100]} {hundred} {spell_number(n % 100)}"
+  if n < 1000000: return f"{spell_number(n // 1000)} {thousand} {spell_number(n % 1000)}"
+  if n < 1000000000: return f"{spell_number(n // 1000000)} {million} {spell_number(n % 1000000)}"
+  return f"{spell_number(n // 1000000000)} {billion} ${spell_number(n % 1000000000)}"
 
 def spell_char(c: str, n: int) -> str:
   return f"{spell_number(n)} ❛{c}❜s"
@@ -85,24 +85,25 @@ def get_alphabet(prefix: str) -> Alphabet:
 def alphabet_to_dict(alphabet: Alphabet) -> dict[str, int]:
   return {k: v for (v, k) in enumerate(alphabet)}
 
-def count_chars(s: str) -> CharCounts:
+type Vector = dict[str, int]
+
+def count_chars(s: str) -> Vector:
   counts = {}
   for c in "".join(s.split()):
     counts[c] = 1 + counts.get(c, 0)
   return counts
 
-type Vector = list[int]
-
 def get_base_vector(prefix: str) -> Vector:
-  alphabet = get_alphabet(prefix)
-  alphabet_dict = alphabet_to_dict(alphabet)
+  return count_chars(spell_output(prefix, []))
 
-  base_vector = [0] * len(alphabet)
-  minimal_message = count_chars(spell_output(prefix, []))
-  for k, v in minimal_message.items():
-    base_vector[alphabet_dict[k]] = v
+def get_alphabet_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, dict[int, Vector]]:
+  alphabet_vectors = {}
 
-  return base_vector
+  for letter in alphabet:
+    lower_limit = base_vector.get(letter, 0)
+    alphabet_vectors[letter] = {count: count_chars(spell_char(letter, count)) for count in range(lower_limit, upper_limit, 2)}
+    
+  return alphabet_vectors
 
 print(f"Alphabet: {get_alphabet("Alphabet:")}")
 print(get_base_vector("Alphabet:"))
