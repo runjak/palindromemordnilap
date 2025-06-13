@@ -144,11 +144,11 @@ def experiment_weights(prefix: str, upper_limit: int, sample_count: int, generat
   base_vector = get_base_vector(prefix)
   char_vectors = get_char_vectors(alphabet, base_vector, upper_limit)
 
-  def normalise_weights(ps: list[float]) -> list[float]:
+  def normalize_weights(ps: list[float]) -> list[float]:
     s = sum(list)
     return [p/s for p in ps]
   
-  char_weights = {char: normalise_weights([1] * len(vectors)) for char, vectors in char_vectors.items()}
+  char_weights = {char: normalize_weights([1] * len(vectors)) for char, vectors in char_vectors.items()}
 
   def choose_char_vectors() -> list[(str, int, Vector)]:
     char_vectors = []
