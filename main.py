@@ -112,50 +112,43 @@ def count_chars(s: str) -> Vector:
 def get_base_vector(prefix: str) -> Vector:
   return count_chars(spell_output_counts(prefix, []))
 
-def get_alphabet_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, dict[int, Vector]]:
-  alphabet_vectors = {}
+def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, dict[int, Vector]]:
+  char_vectors = {}
 
-  for letter in alphabet:
-    lower_limit = base_vector.get(letter, 0)
-    alphabet_vectors[letter] = {
+  for char in alphabet:
+    lower_limit = base_vector.get(char, 0)
+    char_vectors[char] = {
       # we scale by 2 because of the palindrome condition
-      count: scale_vector(count_chars(spell_char(letter, count)), 2)
+      count: scale_vector(count_chars(spell_char(char, count)), 2)
       # we step by 2 because of the palindrome condition
       for count in range(lower_limit, upper_limit, 2)}
     
-  return alphabet_vectors
-
-# FIXME decide: do I wanna say letter or char?
+  return char_vectors
 
 def experiment_fixpoint(prefix: str) -> Vector:
   alphabet = get_alphabet(prefix)
   base_vector = get_base_vector(prefix)
 
-  letter_counts = {letter: base_vector.get(letter, 0) for letter in alphabet}
-  letter_vectors = {letter: scale_vector(count_chars(spell_char(letter, letter_counts[letter])), 2) for letter in alphabet}
+  char_counts = {char: base_vector.get(char, 0) for char in alphabet}
+  char_vectors = {char: scale_vector(count_chars(spell_char(char, char_counts[char])), 2) for char in alphabet}
   
-  letter_sums = sum_vectors(base_vector, *letter_vectors.values())
+  char_sums = sum_vectors(base_vector, *char_vectors.values())
   
   while True:
-    for letter, letter_sum in letter_sums.items():
-      letter_count = letter_counts[letter]
+    for char, char_sum in char_sums.items():
+      char_count = char_counts[char]
       
-      if letter_sum == letter_count:
+      if char_sum == char_count:
         continue
 
-      letter_vector = scale_vector(count_chars(spell_char(letter, letter_sum)), 2)
-      letter_sums = sum_vectors(letter_sums, scale_vector(letter_vectors[letter], -1), letter_vector)
-      letter_counts[letter] = letter_sum
-      letter_vectors[letter] = letter_vector
+      char_vector = scale_vector(count_chars(spell_char(char, char_sum)), 2)
+      char_sums = sum_vectors(char_sums, scale_vector(char_vectors[char], -1), char_vector)
+      char_counts[char] = char_sum
+      char_vectors[char] = char_vector
       break
     else: break
   
-  return letter_sums
-
-
-print(f"Alphabet: {get_alphabet("Alphabet:")}")
-print(get_base_vector("Alphabet:"))
-print(spell_output_counts("Alphabet:", []))
+  return char_sums
 
 print("experiment_fixpoint('test')")
 test_vector = experiment_fixpoint('test')
