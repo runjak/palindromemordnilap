@@ -142,26 +142,34 @@ def get_alphabet(prefix: str) -> Alphabet:
 def alphabet_to_dict(alphabet: Alphabet) -> dict[str, int]:
   return {k: v for (v, k) in enumerate(alphabet)}
 
-def sum_vectors(*vectors: list[Vector]) -> Vector:
+def vector_sum(*vectors: list[Vector]) -> Vector:
   result = {}
   for vector in vectors:
     for k, v in vector.items():
       result[k] = v + result.get(k, 0)
   return result
 
-def scale_vector(vector: Vector, factor: int) -> Vector:
+def vector_scale(vector: Vector, factor: int) -> Vector:
   return {k: v * factor for k, v in vector.items()}
 
-def manhattan_distance(a: Vector, b: Vector) -> int:
-  keys = set(a.keys()) + set(b.keys())
-  return sum([abs(a[k] - b[k]) for k in keys])
-
-def max_vectors(*vectors: list[Vector]) -> Vector:
+def vector_max(*vectors: list[Vector]) -> Vector:
   result = {}
   for vector in vectors:
     for k, v in vector.items():
       result[k] = max(v, result.get(k, 0))
   return result
+
+def vector_eq(a:Vector, b:Vector) -> bool:
+  keys = set(a.keys()) or set(b.keys())
+  for k in keys:
+    if a.get(k, 0) != b.get(k, 0):
+      return False
+  
+  return True
+
+def manhattan_distance(a: Vector, b: Vector) -> int:
+  keys = set(a.keys()) + set(b.keys())
+  return sum([abs(a[k] - b[k]) for k in keys])
 
 def count_chars(s: str) -> Vector:
   counts = {}
@@ -169,10 +177,12 @@ def count_chars(s: str) -> Vector:
     counts[c] = 1 + counts.get(c, 0)
   return counts
 
+assert vector_eq(known_vector, count_chars(known_text)), "Somethings wrong with the count"
+
 def get_base_vector(prefix: str) -> Vector:
   return count_chars(spell_output(prefix, []))
 
-max_change_vector = scale_vector(max_vectors(*[count_chars(spell_number(n)) for n in range(100_000)]), 2)
+max_change_vector = vector_scale(vector_max(*[count_chars(spell_number(n)) for n in range(100_000)]), 2)
 
 delta_space: dict[str, list[int]] = {
     char: list(range(0, max_change_vector.get(char, 0) + 1, 2))
@@ -185,7 +195,7 @@ def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) 
     lower_limit = base_vector.get(char, 0)
     char_vectors[char] = [
       # we scale by 2 because of the palindrome condition
-      (count, scale_vector(count_chars(spell_char(char, count)), 2))
+      (count, vector_scale(count_chars(spell_char(char, count)), 2))
       # we step by 2 because of the palindrome condition
       for count in range(lower_limit, upper_limit, 2)]
     
