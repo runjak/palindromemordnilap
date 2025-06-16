@@ -49,17 +49,12 @@ changing_alphabet: Alphabet = sorted(list(set(
   + spell_char('', 0)) - set(' ')))
 
 def get_alphabet(prefix: str) -> Alphabet:
-  return sorted(list(set(
-    "".join(single_digit + double_digit + below_hundred) 
-      + hundred 
-      + thousand 
-      + million 
-      + billion 
-      + spell_char('', 0)
-      + spell_chars([])
-      + spell_instructions([])
-      + prefix
-    ) - set(' ')))
+  letters = "".join(single_digit + double_digit + below_hundred) 
+  letters += hundred  + thousand + million + billion
+  letters += spell_char('', 0) + spell_chars({}) + spell_instructions({})
+  letters += prefix
+  letters = "".join(letters.split())
+  return sorted(list(set(letters)))
 
 def alphabet_to_dict(alphabet: Alphabet) -> dict[str, int]:
   return {k: v for (v, k) in enumerate(alphabet)}
@@ -122,3 +117,4 @@ import pulp
 
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
+  print(f"Alphabet: {get_alphabet('')}")
