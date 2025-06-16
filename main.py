@@ -1,73 +1,6 @@
 type Vector = dict[str, int]
 type Alphabet = list[str]
 
-known_text = "\n".join([
-  "*",
-  "Write",
-  "down ten ❛a❜s,",
-  "eight ❛c❜s, ten ❛d❜s,",
-  "fifty-two ❛e❜s, thirty-eight ❛f❜s,",
-  "sixteen ❛g❜s, thirty ❛h❜s, forty-eight ❛i❜s,",
-  "six ❛l❜s, four ❛m❜s, thirty-two ❛n❜s, forty-four ❛o❜s,",
-  "four ❛p❜s, four ❛q❜s, forty-two ❛r❜s, eighty-four ❛s❜s,",
-  "seventy-six ❛t❜s, twenty-eight ❛u❜s, four ❛v❜s, four ❛W❜s,",
-  "eighteen ❛w❜s, fourteen ❛x❜s, thirty-two ❛y❜s, four ❛:❜s,",
-  "four ❛*❜s, twenty-six ❛-❜s, fifty-eight ❛,❜s,",
-  "sixty ❛❛❜s and sixty ❛❜❜s, in a",
-  "palindromic sequence",
-  "whose second",
-  "half runs",
-  "thus:",
-  ":suht",
-  "snur flah",
-  "dnoces esohw",
-  "ecneuqes cimordnilap",
-  "a ni ,s❜❜❛ ytxis dna s❜❛❛ ytxis",
-  ",s❜,❛ thgie-ytfif ,s❜-❛ xis-ytnewt ,s❜*❛ ruof",
-  ",s❜:❛ ruof ,s❜y❛ owt-ytriht ,s❜x❛ neetruof ,s❜w❛ neethgie",
-  ",s❜W❛ ruof ,s❜v❛ ruof ,s❜u❛ thgie-ytnewt ,s❜t❛ xis-ytneves",
-  ",s❜s❛ ruof-ythgie ,s❜r❛ owt-ytrof ,s❜q❛ ruof ,s❜p❛ ruof",
-  ",s❜o❛ ruof-ytrof ,s❜n❛ owt-ytriht ,s❜m❛ ruof ,s❜l❛ xis",
-  ",s❜i❛ thgie-ytrof ,s❜h❛ ytriht ,s❜g❛ neetxis",
-  ",s❜f❛ thgie-ytriht ,s❜e❛ owt-ytfif",
-  ",s❜d❛ net ,s❜c❛ thgie",
-  ",s❜a❛ net nwod",
-  "etirW",
-  "*",
-])
-
-known_vector = {
-  'a': 10,
-  'c': 8,
-  'd': 10,
-  'e': 52,
-  'f': 38,
-  'g': 16,
-  'h': 30,
-  'i': 48,
-  'l': 6,
-  'm': 4,
-  'n': 32,
-  'o': 44,
-  'p': 4,
-  'q': 4,
-  'r': 42,
-  's': 84,
-  't': 76,
-  'u': 28,
-  'v': 4,
-  'W': 4,
-  'w': 18,
-  'x': 14,
-  'y': 32,
-  ':': 4,
-  '*': 4,
-  '-': 26,
-  ',': 58,
-  '❛': 60,
-  '❜': 60,
-}
-
 single_digit = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 double_digit = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",]
 below_hundred = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",]
@@ -106,17 +39,6 @@ def spell_instructions(chars: Vector) -> str:
 def spell_output(prefix: str, chars: Vector) -> str:
   start = f"{prefix} {spell_instructions(chars)}".strip()
   return f"{start}\n{start[::-1]}"
-
-if spell_output('', known_vector) != known_text:
-  expected = ''.join(known_text.split())
-  computed = ''.join(spell_output('', known_vector).split())
-  for i in range(0, min(len(expected), len(computed))):
-    e, c = expected[i], computed[i]
-    if e != c:
-      print(f"Difference at position {i}: expected {e!r}, but got {c!r}.")
-      print(f"Expected goes like this: {expected[i:]!r}")
-      print(f"Computed goes like this: {computed[i:]!r}")
-      break
 
 changing_alphabet: Alphabet = sorted(list(set(
   "".join(single_digit + double_digit + below_hundred)
@@ -177,16 +99,8 @@ def count_chars(s: str) -> Vector:
     counts[c] = 1 + counts.get(c, 0)
   return counts
 
-assert vector_eq(known_vector, count_chars(known_text)), "Somethings wrong with the count"
-
 def get_base_vector(prefix: str) -> Vector:
   return count_chars(spell_output(prefix, []))
-
-max_change_vector = vector_scale(vector_max(*[count_chars(spell_number(n)) for n in range(100_000)]), 2)
-
-delta_space: dict[str, list[int]] = {
-    char: list(range(0, max_change_vector.get(char, 0) + 1, 2))
-    for char in changing_alphabet}
 
 def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, list[(int, Vector)]]:
   char_vectors = {}
