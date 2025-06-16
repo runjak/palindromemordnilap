@@ -1,4 +1,3 @@
-
 type Vector = dict[str, int]
 type Alphabet = list[str]
 
@@ -51,8 +50,8 @@ known_vector = {
   'n': 32,
   'o': 44,
   'p': 4,
-  'r': 42,
   'q': 4,
+  'r': 42,
   's': 84,
   't': 76,
   'u': 28,
@@ -82,14 +81,18 @@ def spell_number(n: int) -> str:
   if n <= 0: return ''
   if n < 10: return single_digit[n]
   if n < 20: return double_digit[n - 10]
-  if n < 100: return f"{below_hundred[(n - (n % 10)) // 10 - 2]} {spell_number(n % 10)}"
+  if n < 100:
+    below, recurse = below_hundred[(n - (n % 10)) // 10 - 2], spell_number(n % 10)
+    if len(recurse) == 0:
+      return below
+    return f"{below}-{recurse}"
   if n < 1_000: return f"{single_digit[n // 100]} {hundred} {spell_number(n % 100)}"
   if n < 1_000_000: return f"{spell_number(n // 1_000)} {thousand} {spell_number(n % 1_000)}"
   if n < 1_000_000_000: return f"{spell_number(n // 1_000_000)} {million} {spell_number(n % 1_000_000)}"
   return f"{spell_number(n // 1_000_000_000)} {billion} ${spell_number(n % 1_000_000_000)}"
 
 def spell_char(c: str, n: int) -> str:
-  return f"{spell_number(n)} ❛{c}❜s"
+  return f"{spell_number(n).strip()} ❛{c}❜s"
 
 def spell_chars(chars: Vector) -> str:
   spelled = [spell_char(c, n) for c, n in chars.items() if n > 0]
@@ -97,12 +100,23 @@ def spell_chars(chars: Vector) -> str:
   return f"{", ".join(parts)} and {last}"
 
 def spell_instructions(chars: Vector) -> str:
-  return f"Write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
+  return f"* Write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
   return f"With that - please write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
 
 def spell_output(prefix: str, chars: Vector) -> str:
-  start = f"{prefix} {spell_instructions(chars)}"
+  start = f"{prefix} {spell_instructions(chars)}".strip()
   return f"{start}\n{start[::-1]}"
+
+if spell_output('', known_vector) != known_text:
+  expected = ''.join(known_text.split())
+  computed = ''.join(spell_output('', known_vector).split())
+  for i in range(0, min(len(expected), len(computed))):
+    e, c = expected[i], computed[i]
+    if e != c:
+      print(f"Difference at position {i}: expected {e!r}, but got {c!r}.")
+      print(f"Expected goes like this: {expected[i:]!r}")
+      print(f"Computed goes like this: {computed[i:]!r}")
+      break
 
 changing_alphabet: Alphabet = sorted(list(set(
   "".join(single_digit + double_digit + below_hundred)
