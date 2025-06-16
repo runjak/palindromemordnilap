@@ -32,26 +32,20 @@ def spell_chars(chars: Vector) -> str:
   [*parts, last] = spelled if len(spelled) > 0 else [""]
   return f"{", ".join(parts)} and {last}"
 
-def spell_instructions(chars: Vector) -> str:
-  return f"* Write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
-  return f"With that - please write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
+def spell_instructions(chars: Vector, prefix: str, suffix: str) -> str:
+  return f"{prefix}{spell_chars(chars)}{suffix}".strip()
 
-def spell_output(prefix: str, chars: Vector) -> str:
-  start = f"{prefix} {spell_instructions(chars)}".strip()
+default_prefix = '* Write down '
+default_suffix = ', in a palindromic sequence whose second half runs thus:'
+
+def spell_output(chars: Vector, prefix=default_prefix, suffix=default_suffix) -> str:
+  start = f"{spell_instructions(chars, prefix, suffix)}".strip()
   return f"{start}\n{start[::-1]}"
 
-changing_alphabet: Alphabet = sorted(list(set(
-  "".join(single_digit + double_digit + below_hundred)
-  + hundred
-  + thousand
-  + million
-  + billion
-  + spell_char('', 0)) - set(' ')))
-
-def get_alphabet(prefix: str) -> Alphabet:
+def get_alphabet(prefix: str, suffix: str) -> Alphabet:
   letters = "".join(single_digit + double_digit + below_hundred) 
   letters += hundred  + thousand + million + billion
-  letters += spell_char('', 0) + spell_chars({}) + spell_instructions({})
+  letters += spell_char('', 0) + spell_chars({}) + spell_instructions({}, prefix, suffix)
   letters += prefix
   letters = "".join(letters.split())
   return sorted(list(set(letters)))
@@ -94,8 +88,8 @@ def count_chars(s: str) -> Vector:
     counts[c] = 1 + counts.get(c, 0)
   return counts
 
-def get_base_vector(prefix: str) -> Vector:
-  return count_chars(spell_output(prefix, []))
+def get_lower_bounds(prefix: str) -> Vector:
+  return vector_scale(count_chars(spell_output({}, prefix)), 2)
 
 def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, list[(int, Vector)]]:
   char_vectors = {}
@@ -117,4 +111,11 @@ import pulp
 
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
-  print(f"Alphabet: {get_alphabet('')}")
+
+  prefix = default_prefix
+  suffix = default_suffix
+  lower_bounds = get_lower_bounds(prefix)
+  alphabet = get_alphabet(prefix, suffix)
+
+  print(f"Alphabet: {alphabet}")
+  print(f"Lower bounds: {lower_bounds}")

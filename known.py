@@ -68,9 +68,9 @@ known_vector = {
 if __name__ == '__main__':
   import main
 
-  if main.spell_output('', known_vector) != known_text:
+  if main.spell_output(known_vector) != known_text:
     expected = ''.join(known_text.split())
-    computed = ''.join(main.spell_output('', known_vector).split())
+    computed = ''.join(main.spell_output(known_vector).split())
     for i in range(0, min(len(expected), len(computed))):
       e, c = expected[i], computed[i]
       if e != c:
