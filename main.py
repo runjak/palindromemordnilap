@@ -180,31 +180,6 @@ def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) 
     
   return char_vectors
 
-def experiment_fixpoint(prefix: str) -> Vector:
-  alphabet = get_alphabet(prefix)
-  base_vector = get_base_vector(prefix)
-
-  char_counts = {char: base_vector.get(char, 0) for char in alphabet}
-  char_vectors = {char: scale_vector(count_chars(spell_char(char, char_counts[char])), 2) for char in alphabet}
-  
-  char_sums = sum_vectors(base_vector, *char_vectors.values())
-  
-  while True:
-    for char, char_sum in char_sums.items():
-      char_count = char_counts[char]
-      
-      if char_sum == char_count:
-        continue
-
-      char_vector = scale_vector(count_chars(spell_char(char, char_sum)), 2)
-      char_sums = sum_vectors(char_sums, scale_vector(char_vectors[char], -1), char_vector)
-      char_counts[char] = char_sum
-      char_vectors[char] = char_vector
-      break
-    else: break
-  
-  return char_sums
-
 import random
 
 def experiment_weights(prefix: str, upper_limit: int, sample_count: int, generation_count: int) -> Vector:
