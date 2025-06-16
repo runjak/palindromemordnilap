@@ -117,3 +117,8 @@ def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) 
 
 # pulp is an mlp solver that could be useful
 # highspy package for solver
+
+import pulp
+
+if __name__ == '__main__':
+  print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")

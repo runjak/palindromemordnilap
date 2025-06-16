@@ -65,17 +65,20 @@ known_vector = {
   '❜': 60,
 }
 
-import main
+if __name__ == '__main__':
+  import main
 
-if main.spell_output('', known_vector) != known_text:
-  expected = ''.join(known_text.split())
-  computed = ''.join(main.spell_output('', known_vector).split())
-  for i in range(0, min(len(expected), len(computed))):
-    e, c = expected[i], computed[i]
-    if e != c:
-      print(f"Difference at position {i}: expected {e!r}, but got {c!r}.")
-      print(f"Expected goes like this: {expected[i:]!r}")
-      print(f"Computed goes like this: {computed[i:]!r}")
-      break
+  if main.spell_output('', known_vector) != known_text:
+    expected = ''.join(known_text.split())
+    computed = ''.join(main.spell_output('', known_vector).split())
+    for i in range(0, min(len(expected), len(computed))):
+      e, c = expected[i], computed[i]
+      if e != c:
+        print(f"Difference at position {i}: expected {e!r}, but got {c!r}.")
+        print(f"Expected goes like this: {expected[i:]!r}")
+        print(f"Computed goes like this: {computed[i:]!r}")
+        break
 
-assert main.vector_eq(known_vector, main.count_chars(known_text)), "Somethings wrong with the count"
+  assert main.vector_eq(known_vector, main.count_chars(known_text)), "Somethings wrong with the count"
+
+  print("Known values checkout.")
