@@ -91,25 +91,18 @@ def spell_number(n: int) -> str:
 def spell_char(c: str, n: int) -> str:
   return f"{spell_number(n)} ❛{c}❜s"
 
-type CharCounts = list[(str, int)]
-
-def spell_chars(chars: CharCounts) -> str:
-  spelled = [spell_char(c, n) if n > 0 else "" for (c, n) in chars]
+def spell_chars(chars: Vector) -> str:
+  spelled = [spell_char(c, n) for c, n in chars.items() if n > 0]
   [*parts, last] = spelled if len(spelled) > 0 else [""]
   return f"{", ".join(parts)} and {last}"
 
-def spell_instructions(chars: CharCounts) -> str:
+def spell_instructions(chars: Vector) -> str:
   return f"Write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
   return f"With that - please write down {spell_chars(chars)}, in a palindromic sequence whose second half runs thus:"
 
-def spell_output_counts(prefix: str, chars: CharCounts) -> str:
+def spell_output(prefix: str, chars: Vector) -> str:
   start = f"{prefix} {spell_instructions(chars)}"
   return f"{start}\n{start[::-1]}"
-
-def spell_output_vector(prefix: str, vector: Vector) -> str:
-  return spell_output_counts(prefix, vector_to_char_counts(vector))
-
-type Alphabet = list[str]
 
 changing_alphabet: Alphabet = sorted(list(set(
   "".join(single_digit + double_digit + below_hundred)
@@ -134,8 +127,6 @@ def get_alphabet(prefix: str) -> Alphabet:
 
 def alphabet_to_dict(alphabet: Alphabet) -> dict[str, int]:
   return {k: v for (v, k) in enumerate(alphabet)}
-
-type Vector = dict[str, int]
 
 def sum_vectors(*vectors: list[Vector]) -> Vector:
   result = {}
@@ -168,7 +159,7 @@ def count_chars(s: str) -> Vector:
   return counts
 
 def get_base_vector(prefix: str) -> Vector:
-  return count_chars(spell_output_counts(prefix, []))
+  return count_chars(spell_output(prefix, []))
 
 max_change_vector = scale_vector(max_vectors(*[count_chars(spell_number(n)) for n in range(100_000)]), 2)
 
