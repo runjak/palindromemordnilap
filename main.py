@@ -1,3 +1,74 @@
+
+type Vector = dict[str, int]
+type Alphabet = list[str]
+
+known_text = "\n".join([
+  "*",
+  "Write",
+  "down ten ❛a❜s,",
+  "eight ❛c❜s, ten ❛d❜s,",
+  "fifty-two ❛e❜s, thirty-eight ❛f❜s,",
+  "sixteen ❛g❜s, thirty ❛h❜s, forty-eight ❛i❜s,",
+  "six ❛l❜s, four ❛m❜s, thirty-two ❛n❜s, forty-four ❛o❜s,",
+  "four ❛p❜s, four ❛q❜s, forty-two ❛r❜s, eighty-four ❛s❜s,",
+  "seventy-six ❛t❜s, twenty-eight ❛u❜s, four ❛v❜s, four ❛W❜s,",
+  "eighteen ❛w❜s, fourteen ❛x❜s, thirty-two ❛y❜s, four ❛:❜s,",
+  "four ❛*❜s, twenty-six ❛-❜s, fifty-eight ❛,❜s,",
+  "sixty ❛❛❜s and sixty ❛❜❜s, in a",
+  "palindromic sequence",
+  "whose second",
+  "half runs",
+  "thus:",
+  ":suht",
+  "snur flah",
+  "dnoces esohw",
+  "ecneuqes cimordnilap",
+  "a ni ,s❜❜❛ ytxis dna s❜❛❛ ytxis",
+  ",s❜,❛ thgie-ytfif ,s❜-❛ xis-ytnewt ,s❜*❛ ruof",
+  ",s❜:❛ ruof ,s❜y❛ owt-ytriht ,s❜x❛ neetruof ,s❜w❛ neethgie",
+  ",s❜W❛ ruof ,s❜v❛ ruof ,s❜u❛ thgie-ytnewt ,s❜t❛ xis-ytneves",
+  ",s❜s❛ ruof-ythgie ,s❜r❛ owt-ytrof ,s❜q❛ ruof ,s❜p❛ ruof",
+  ",s❜o❛ ruof-ytrof ,s❜n❛ owt-ytriht ,s❜m❛ ruof ,s❜l❛ xis",
+  ",s❜i❛ thgie-ytrof ,s❜h❛ ytriht ,s❜g❛ neetxis",
+  ",s❜f❛ thgie-ytriht ,s❜e❛ owt-ytfif",
+  ",s❜d❛ net ,s❜c❛ thgie",
+  ",s❜a❛ net nwod",
+  "etirW",
+  "*",
+])
+
+known_vector = {
+  'a': 10,
+  'c': 8,
+  'd': 10,
+  'e': 52,
+  'f': 38,
+  'g': 16,
+  'h': 30,
+  'i': 48,
+  'l': 6,
+  'm': 4,
+  'n': 32,
+  'o': 44,
+  'p': 4,
+  'r': 42,
+  'q': 4,
+  's': 84,
+  't': 76,
+  'u': 28,
+  'v': 4,
+  'W': 4,
+  'w': 18,
+  'x': 14,
+  'y': 32,
+  ':': 4,
+  '*': 4,
+  '-': 26,
+  ',': 58,
+  '❛': 60,
+  '❜': 60,
+}
+
 single_digit = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine"]
 double_digit = ["ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen",]
 below_hundred = ["twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety",]
@@ -34,6 +105,9 @@ def spell_instructions(chars: CharCounts) -> str:
 def spell_output_counts(prefix: str, chars: CharCounts) -> str:
   start = f"{prefix} {spell_instructions(chars)}"
   return f"{start}\n{start[::-1]}"
+
+def spell_output_vector(prefix: str, vector: Vector) -> str:
+  return spell_output_counts(prefix, vector_to_char_counts(vector))
 
 type Alphabet = list[str]
 
@@ -86,9 +160,6 @@ def max_vectors(*vectors: list[Vector]) -> Vector:
     for k, v in vector.items():
       result[k] = max(v, result.get(k, 0))
   return result
-
-def spell_output_vector(prefix: str, vector: Vector) -> str:
-  return spell_output_counts(prefix, vector_to_char_counts(vector))
 
 def count_chars(s: str) -> Vector:
   counts = {}
