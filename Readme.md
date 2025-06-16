@@ -16,3 +16,9 @@ Freeze requirements:
 ```bash
 pip freeze > requirements.txt
 ```
+
+Install requirements:
+
+```bash
+pip install -r requirements.txt
+```
