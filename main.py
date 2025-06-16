@@ -185,3 +185,6 @@ def experiment_weights(prefix: str, upper_limit: int, sample_count: int, generat
       None # FIXME do something to the weights here.
 
   # FIXME we will continue down here.
+
+# pulp is an mlp solver that could be useful
+# highspy package for solver
