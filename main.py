@@ -180,48 +180,5 @@ def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) 
     
   return char_vectors
 
-import random
-
-def experiment_weights(prefix: str, upper_limit: int, sample_count: int, generation_count: int) -> Vector:
-  alphabet = get_alphabet(prefix)
-  base_vector = get_base_vector(prefix)
-  char_vectors = get_char_vectors(alphabet, base_vector, upper_limit)
-
-  def normalize_weights(ps: list[float]) -> list[float]:
-    s = sum(list)
-    return [p/s for p in ps]
-  
-  char_weights = {char: normalize_weights([1] * len(vectors)) for char, vectors in char_vectors.items()}
-
-  def choose_char_vectors() -> list[(str, int, Vector)]:
-    char_vectors = []
-    for char, population in char_vectors.items():
-      [(count, vector)] = random.choices(population, char_weights, k=1)
-      char_vectors.append((char, count, vector))
-    return char_vectors
-  
-  def choice_error(choice: list[(str, int, Vector)]) -> int:
-    a = sum_vectors(base_vector, *[vector for (_, _, vector) in choice])
-    b = sum_vectors(base_vector, {char: count for (char, count, _) in choice})
-    return manhattan_distance(a, b)
-  
-  def sample_errors() -> Vector:
-    errors = {}
-    
-    for _ in range(sample_count):
-      choice = choose_char_vectors()
-      error = choice_error(choice)
-      for (char, _, _) in choice:
-          errors[char] = error + errors.get(char, 0)
-
-    return errors
-  
-  def generate():
-    for _ in range(generation_count):
-      errors = sample_errors()
-      None # FIXME do something to the weights here.
-
-  # FIXME we will continue down here.
-
 # pulp is an mlp solver that could be useful
 # highspy package for solver
