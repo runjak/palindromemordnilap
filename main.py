@@ -119,3 +119,20 @@ if __name__ == '__main__':
 
   print(f"Alphabet: {alphabet}")
   print(f"Lower bounds: {lower_bounds}")
+
+  v1 = pulp.LpVariable("v1", lowBound=5, upBound=11, cat=pulp.LpInteger)
+  v2 = pulp.LpVariable("v2", lowBound=2, upBound=13, cat=pulp.LpInteger)
+
+  problem = pulp.LpProblem("Example problem", pulp.LpMaximize)
+  # Objective function added first
+  problem += 2 * v1 + 3 * v2, "How cool we think this is"
+  # Additional constraint
+  problem += v1 + v2 <= 11, "v1 + v2 needs to be below 11"
+
+  problem.solve()
+
+  print(f"Problem status: {pulp.LpStatus[problem.status]}")
+
+  for v in problem.variables():
+    print(f"{v.name}={v.varValue}")
+
