@@ -104,10 +104,24 @@ def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) 
     
   return char_vectors
 
-# pulp is an mlp solver that could be useful
-# highspy package for solver
-
 import pulp
+
+def print_problem(problem: pulp.LpProblem):
+  print(f"Problem status: {pulp.LpStatus[problem.status]}")
+  for v in problem.variables():
+    print(f"{v.name}={v.varValue}")
+
+def example_problem() -> pulp.LpProblem:
+  v1 = pulp.LpVariable("v1", lowBound=5, upBound=11, cat=pulp.LpInteger)
+  v2 = pulp.LpVariable("v2", lowBound=2, upBound=13, cat=pulp.LpInteger)
+
+  problem = pulp.LpProblem("Example_problem", pulp.LpMaximize)
+  # Objective function added first
+  problem += 2 * v1 + 3 * v2
+  # Additional constraint
+  problem += v1 + v2 <= 11
+  
+  return problem
 
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
@@ -116,23 +130,13 @@ if __name__ == '__main__':
   suffix = default_suffix
   lower_bounds = get_lower_bounds(prefix)
   alphabet = get_alphabet(prefix, suffix)
+  char_vectors = get_char_vectors(alphabet=alphabet, base_vector=lower_bounds, upper_limit=100)
 
   print(f"Alphabet: {alphabet}")
   print(f"Lower bounds: {lower_bounds}")
+  print(f"char vectors: {char_vectors}")
 
-  v1 = pulp.LpVariable("v1", lowBound=5, upBound=11, cat=pulp.LpInteger)
-  v2 = pulp.LpVariable("v2", lowBound=2, upBound=13, cat=pulp.LpInteger)
-
-  problem = pulp.LpProblem("Example problem", pulp.LpMaximize)
-  # Objective function added first
-  problem += 2 * v1 + 3 * v2, "How cool we think this is"
-  # Additional constraint
-  problem += v1 + v2 <= 11, "v1 + v2 needs to be below 11"
-
-  problem.solve()
-
-  print(f"Problem status: {pulp.LpStatus[problem.status]}")
-
-  for v in problem.variables():
-    print(f"{v.name}={v.varValue}")
+  problem = example_problem()
+  problem.solve(solver=pulp.HiGHS())
+  print_problem(problem)
 
