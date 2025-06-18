@@ -1,3 +1,5 @@
+import pulp
+
 type Vector = dict[str, int]
 type Alphabet = list[str]
 
@@ -25,6 +27,8 @@ def spell_number(n: int) -> str:
   return f"{spell_number(n // 1_000_000_000)} {billion} ${spell_number(n % 1_000_000_000)}"
 
 def spell_char(c: str, n: int) -> str:
+  if n == 0:
+    return ''
   return f"{spell_number(n).strip()} ❛{c}❜s"
 
 def spell_chars(chars: Vector) -> str:
@@ -91,20 +95,18 @@ def count_chars(s: str) -> Vector:
 def get_lower_bounds(prefix: str) -> Vector:
   return vector_scale(count_chars(spell_output({}, prefix)), 2)
 
-def get_char_vectors(alphabet: Alphabet, base_vector: Vector, upper_limit: int) -> dict[str, list[(int, Vector)]]:
-  char_vectors = {}
+def get_alphabet_choices(alphabet: Alphabet, lower_bounds: Vector, upper_bound: int) -> dict[str, list[(pulp.LpVariable, Vector)]]:
+  alphabet_vectors = {}
 
   for char in alphabet:
-    lower_limit = base_vector.get(char, 0)
-    char_vectors[char] = [
+    lower_bound = lower_bounds.get(char, 0)
+    alphabet_vectors[char] = [
       # we scale by 2 because of the palindrome condition
-      (count, vector_scale(count_chars(spell_char(char, count)), 2))
+      (pulp.LpVariable(name=f"{char}_{count}", lowBound=0, upBound=1, cat=pulp.LpBinary), vector_scale(count_chars(spell_char(char, count)), 2))
       # we step by 2 because of the palindrome condition
-      for count in range(lower_limit, upper_limit, 2)]
+      for count in range(lower_bound, lower_bound + upper_bound, 2)]
     
-  return char_vectors
-
-import pulp
+  return alphabet_vectors
 
 def print_problem(problem: pulp.LpProblem):
   print(f"Problem status: {pulp.LpStatus[problem.status]}")
@@ -129,12 +131,21 @@ if __name__ == '__main__':
   prefix = default_prefix
   suffix = default_suffix
   lower_bounds = get_lower_bounds(prefix)
+  upper_bound = 100
   alphabet = get_alphabet(prefix, suffix)
-  char_vectors = get_char_vectors(alphabet=alphabet, base_vector=lower_bounds, upper_limit=100)
 
   print(f"Alphabet: {alphabet}")
   print(f"Lower bounds: {lower_bounds}")
-  print(f"char vectors: {char_vectors}")
+
+  problem = pulp.LpProblem(name="Fiddling", sense=pulp.LpMaximize)
+
+  alphabet_choices = get_alphabet_choices(alphabet,lower_bounds, upper_limit)
+  
+  # For every letter we choose at most one variable
+  for choices in alphabet_choices.values():
+    problem += sum([v for (v, _) in variables]) <= 1
+  
+  print(alphabet_variables)
 
   problem = example_problem()
   problem.solve(solver=pulp.HiGHS())
