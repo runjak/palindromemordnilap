@@ -95,35 +95,41 @@ def count_chars(s: str) -> Vector:
 def get_lower_bounds(prefix: str) -> Vector:
   return vector_scale(count_chars(spell_output({}, prefix)), 2)
 
-def get_alphabet_choices(alphabet: Alphabet, lower_bounds: Vector, upper_bound: int) -> dict[str, list[(pulp.LpVariable, Vector)]]:
+def get_alphabet_choices(alphabet: Alphabet, lower_bounds: Vector, upper_bound: int) -> dict[str, list[(int, pulp.LpVariable, Vector)]]:
   alphabet_vectors = {}
 
   for char in alphabet:
     lower_bound = lower_bounds.get(char, 0)
     alphabet_vectors[char] = [
-      # we scale by 2 because of the palindrome condition
-      (pulp.LpVariable(name=f"{char}_{count}", lowBound=0, upBound=1, cat=pulp.LpBinary), vector_scale(count_chars(spell_char(char, count)), 2))
+      (count, pulp.LpVariable(name=f"{char}_{count}", lowBound=0, upBound=1, cat=pulp.LpBinary),
+        # we scale by 2 because of the palindrome condition
+        vector_scale(count_chars(spell_char(char, count)), 2))
       # we step by 2 because of the palindrome condition
       for count in range(lower_bound, lower_bound + upper_bound, 2)]
     
   return alphabet_vectors
 
+def compute_contributors(alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]]) -> dict[str, list[(int, pulp.LpVariable)]]:
+  """
+  For every letter we compute:
+  - A list[(int, pulp.LpVariable)] of weights and variables that contribute to this letter.
+  """
+  contributors = {letter: [] for letter in alphabet_choices.keys()}
+
+  for (_, variable, vector) in alphabet_choices.values():
+    for letter, weight in vector.items():
+      contributors[letter].append((weight, variable))
+  
+  return contributors
+
+def thingy(alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]]):
+  # FIXME continue the crimes.
+  None
+
 def print_problem(problem: pulp.LpProblem):
   print(f"Problem status: {pulp.LpStatus[problem.status]}")
   for v in problem.variables():
     print(f"{v.name}={v.varValue}")
-
-def example_problem() -> pulp.LpProblem:
-  v1 = pulp.LpVariable("v1", lowBound=5, upBound=11, cat=pulp.LpInteger)
-  v2 = pulp.LpVariable("v2", lowBound=2, upBound=13, cat=pulp.LpInteger)
-
-  problem = pulp.LpProblem("Example_problem", pulp.LpMaximize)
-  # Objective function added first
-  problem += 2 * v1 + 3 * v2
-  # Additional constraint
-  problem += v1 + v2 <= 11
-  
-  return problem
 
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
@@ -139,15 +145,15 @@ if __name__ == '__main__':
 
   problem = pulp.LpProblem(name="Fiddling", sense=pulp.LpMaximize)
 
-  alphabet_choices = get_alphabet_choices(alphabet,lower_bounds, upper_limit)
+  alphabet_choices = get_alphabet_choices(
+    alphabet=alphabet,
+    lower_bounds=lower_bounds,
+    upper_bound=upper_bound)
   
   # For every letter we choose at most one variable
   for choices in alphabet_choices.values():
-    problem += sum([v for (v, _) in variables]) <= 1
+    problem += sum([variable for (_, variable, _) in choices]) == 1
   
-  print(alphabet_variables)
-
-  problem = example_problem()
   problem.solve(solver=pulp.HiGHS())
   print_problem(problem)
 
