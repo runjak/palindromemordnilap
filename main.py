@@ -122,32 +122,36 @@ def compute_contributors(alphabet_choices: dict[str, list[(int, pulp.LpVariable,
   
   return contributors
 
-def letter_constraints(alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]]):
+def implies(a: pulp.LpVariable, b: pulp.LpVariable) -> pulp.LpConstraint:
+  """
+    How do implications work in ILP?
+    a -> b
+
+    !a | b
+    1 1 1
+    1 0 0
+    0 1 1
+    0 0 1
+
+    a - b < 1
+    1 1 ( 0) 1
+    1 0 ( 1) 0
+    0 1 (-1) 1
+    0 0 ( 0) 1
+  """
+  return a - b < 1
+
+def letter_constraints(alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]]) -> list[pulp.LpConstraint]:
   contributors = compute_contributors(alphabet_choices=alphabet_choices)
   constraints = []
+
   for letter, letter_choices in alphabet_choices.items():
     contributor_sum = sum([weight * contributor_variable for (weight, contributor_variable) in contributors[letter]])
     for (count, letter_variable, _) in letter_choices:
-      None
-  # FIXME continue the crimes.
-  None
-
-"""
-  How do implications work in ILP?
-  a -> b
-
-  !a | b
-  1 1 1
-  1 0 0
-  0 1 1
-  0 0 1
-
-  a - b < 1
-  1 1 1
-  1 0 0
-  0 1 1
-  0 0 1
-"""
+      weighted_letter = count * letter_variable
+      constraints += [implies(weighted_letter, contributor_sum), implies(contributor_sum, weighted_letter)]
+  
+  return constraints
 
 def print_problem(problem: pulp.LpProblem):
   print(f"Problem status: {pulp.LpStatus[problem.status]}")
