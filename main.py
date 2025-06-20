@@ -109,6 +109,12 @@ def get_alphabet_choices(alphabet: Alphabet, lower_bounds: Vector, upper_bound: 
     
   return alphabet_vectors
 
+def alphabet_choices_by_variable(alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]]) -> dict[pulp.LpVariable, (str, int)]:
+  return {
+    variable: (letter, count)
+    for letter, choices in alphabet_choices.items()
+    for (count, variable, _) in choices}
+
 def compute_contributors(alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]]) -> dict[str, list[(int, pulp.LpVariable)]]:
   """
   For every letter we compute:
@@ -145,28 +151,43 @@ def implies(a: pulp.LpVariable, b: pulp.LpVariable) -> pulp.LpConstraint:
   """
   return a - b <= 0
 
-def letter_constraints(alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]]) -> list[pulp.LpConstraint]:
+def absolute(x: pulp.LpVariable):
+  """
+  How do you constrain the absolute value of some variable?
+
+  Structure that is {1, -1}: (1 - 2b)
+  """
+  None
+
+def letter_constraints(alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]], lower_bounds: Vector) -> list[pulp.LpConstraint]:
   contributors = compute_contributors(alphabet_choices=alphabet_choices)
   constraints = []
 
   for letter, letter_choices in alphabet_choices.items():
-    contributor_sum = sum([weight * contributor_variable for (weight, contributor_variable) in contributors[letter]])
+    contributor_sum = lower_bounds.get(letter, 0) + sum([weight * contributor_variable for (weight, contributor_variable) in contributors[letter]])
     for (count, letter_variable, _) in letter_choices:
       weighted_letter = count * letter_variable
-      constraints += [implies(weighted_letter, contributor_sum), implies(contributor_sum, weighted_letter)]
+      constraints += [implies(weighted_letter, contributor_sum)]
+      # I'm not sure what to make of this. There's some kind of issue here and I don't know why/which.
+      # constraints += [implies(weighted_letter, contributor_sum), implies(contributor_sum, weighted_letter)]
 
   return constraints
 
-def print_problem(problem: pulp.LpProblem):
+def print_problem(problem: pulp.LpProblem, alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]]) -> None:
+  by_variable = alphabet_choices_by_variable(alphabet_choices=alphabet_choices)
+  vector = {}
+  
   print(f"Problem status: {pulp.LpStatus[problem.status]}")
   for v in problem.variables():
     value = int(v.varValue)
     if value != 0:
       print(f"{v.name}={v.varValue}")
+      (letter, count) = by_variable[v]
+      vector[letter] = count
+  
+  print(spell_instructions(vector, default_prefix, default_suffix))
 
-if __name__ == '__main__':
-  print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
-
+def main():
   prefix = default_prefix
   suffix = default_suffix
   lower_bounds = get_lower_bounds(prefix)
@@ -176,19 +197,81 @@ if __name__ == '__main__':
   print(f"Alphabet: {alphabet}")
   print(f"Lower bounds: {lower_bounds}")
 
-  problem = pulp.LpProblem(name="Fiddling", sense=pulp.LpMaximize)
+  problem = pulp.LpProblem(name="Fiddling", sense=pulp.LpMinimize)
 
   alphabet_choices = get_alphabet_choices(
     alphabet=alphabet,
     lower_bounds=lower_bounds,
     upper_bound=upper_bound)
+
+  """
+  What do we even optimize here?
+  We want to minimize a distance.
+  The distance is between:
+  - The sum of all picked per-letter weights
+  - The sum of all picked contributing weights plus the base vector
+  """
+  sum_of_per_letter_weights = sum([
+    weight * letter_variable
+    for letter_choices in alphabet_choices.values()
+    for (weight, letter_variable, _) in letter_choices
+    ])
   
-  # For every letter we choose at most one variable
+  # FIXME is this right to just sum up, or should it be the sum of per-letter distances instead?
+  # It is not right, but maybe still interesting o.O
+
+  contributors = compute_contributors(alphabet_choices=alphabet_choices)
+  sum_of_all_contributing_weights_plus_base = None
+  for letter, letter_contributors in contributors.items():
+    base = lower_bounds.get(letter, 0)
+    None
+
+  # For every letter we choose at exactly one variable
   for choices in alphabet_choices.values():
     problem += sum([variable for (_, variable, _) in choices]) == 1
   
-  for constraint in letter_constraints(alphabet_choices=alphabet_choices):
+  for constraint in letter_constraints(alphabet_choices=alphabet_choices, lower_bounds=lower_bounds):
     problem += constraint
 
   problem.solve(solver=pulp.HiGHS())
-  print_problem(problem)
+  print_problem(problem, alphabet_choices=alphabet_choices)
+
+
+def experiment_e():
+  print("Experiment e\n")
+  
+  prefix = "The number of e's in this text is: "
+  lower_limit = count_chars(prefix).get('e', 0)
+  upper_limit = lower_limit + 4
+
+  print(f"Choosing 'e' count from [{lower_limit}, {upper_limit}] for 'e's in\n\t{prefix!r}")
+
+  e_variables = {
+    pulp.LpVariable(name=f"e_{count}", cat=pulp.LpBinary): count
+    for count in range(lower_limit, upper_limit + 1)}
+  
+  e_offsets = {count: count_chars(spell_number(count)).get('e', 0) for count in e_variables.values()}
+  print(f"e_offsets:{e_offsets!r}")
+  total_number_of_e_s = lower_limit + sum([c * v for v, c in e_variables.items()])
+
+  problem = pulp.LpProblem(name="Experiment_e", sense=pulp.LpMinimize)
+
+  # Make sure we choose only one count:
+  problem += sum(e_variables.keys()) == 1, "pick exactly one 'e'"
+
+  # Construct e count constraint
+  offset_sum = sum([e_offsets.get(c, 0) * v for v, c in e_variables.items()])
+  weighted_variables = sum([-c * v for v, c in e_variables.items()])
+  problem += lower_limit + offset_sum + weighted_variables == 0
+
+  problem.solve(solver=pulp.HiGHS())
+  print(f"Problem status: {pulp.LpStatus[problem.status]}")
+  for v in problem.variables():
+    value = int(v.varValue)
+    if value != 0:
+      print(f"{v.name}={v.varValue}")
+      print(f"{prefix + spell_number(e_variables[v])!r}")
+
+if __name__ == '__main__':
+  print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
+  experiment_e()
