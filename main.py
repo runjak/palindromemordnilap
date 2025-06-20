@@ -322,8 +322,18 @@ def new_main():
     if value != 0:
       print(f"{v.name}={value} ({v.varValue})")
 
+def explore():
+  solution = {'*': 6,',': 6,':': 6,'W': 6,'a': 18,'b': 2,'c': 14,'d': 22,'g': 12,'h': 36,'i': 68,'l': 14,'m': 6,'n': 46,'p': 6,'q': 6,'s': 112,'t': 84,'u': 28,'v': 6,'w': 30,'x': 32,'y': 34,'❛': 62,'❜': 62}
+  print(f"Exploring solution:\n{solution!r}")
+  spelled = spell_output(solution)
+  print(f"Solution looks like this:\n{spelled!r}")
+  actual = count_chars(spelled)
+  difference = {k: v - actual.get(k, 0) for k, v in solution.items()}
+  print(f"difference is:\n{difference!r}")
+
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
   # experiment_e()
-  new_main()
+  # new_main()
+  explore()
   # main()
