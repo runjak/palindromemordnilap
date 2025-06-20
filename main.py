@@ -116,9 +116,11 @@ def compute_contributors(alphabet_choices: dict[str, list[(int, pulp.LpVariable,
   """
   contributors = {letter: [] for letter in alphabet_choices.keys()}
 
-  for (_, variable, vector) in alphabet_choices.values():
-    for letter, weight in vector.items():
-      contributors[letter].append((weight, variable))
+  for letter_choices in alphabet_choices.values():
+    for (_, variable, vector) in letter_choices:
+      for letter, weight in vector.items():
+        contributors[letter] = contributors.get(letter, []) + [(weight, variable)]
+        # contributors[letter].append((weight, variable))
   
   return contributors
 
@@ -138,8 +140,10 @@ def implies(a: pulp.LpVariable, b: pulp.LpVariable) -> pulp.LpConstraint:
     1 0 ( 1) 0
     0 1 (-1) 1
     0 0 ( 0) 1
+
+    a - b <= 0
   """
-  return a - b < 1
+  return a - b <= 0
 
 def letter_constraints(alphabet_choices: dict[str, list[(int, pulp.LpVariable, Vector)]]) -> list[pulp.LpConstraint]:
   contributors = compute_contributors(alphabet_choices=alphabet_choices)
@@ -150,7 +154,7 @@ def letter_constraints(alphabet_choices: dict[str, list[(int, pulp.LpVariable, V
     for (count, letter_variable, _) in letter_choices:
       weighted_letter = count * letter_variable
       constraints += [implies(weighted_letter, contributor_sum), implies(contributor_sum, weighted_letter)]
-  
+
   return constraints
 
 def print_problem(problem: pulp.LpProblem):
@@ -181,6 +185,9 @@ if __name__ == '__main__':
   for choices in alphabet_choices.values():
     problem += sum([variable for (_, variable, _) in choices]) == 1
   
+  for constraint in letter_constraints(alphabet_choices=alphabet_choices):
+    problem += constraint
+
   problem.solve(solver=pulp.HiGHS())
   print_problem(problem)
 
