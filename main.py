@@ -293,10 +293,10 @@ def new_main():
   letter_count_offsets: dict[str, list[(int, pulp.LpVariable)]] = {letter: [] for letter in alphabet}
 
   for letter, choices in letter_variables_counts.items():
-    for variable, count in choices.items():
-      offset_vector = vector_scale(count_chars(spell_char(letter, count)), 2)
-      for offset_letter, offset_weight in offset_vector.items():
-        letter_count_offsets[letter].append((offset_weight, variable))
+    for variable, count in choices.items(): # e_68, 68
+      offset_vector = vector_scale(count_chars(spell_char(letter, count)), 2) # 2 * (achtundsechtzig es -> a:1, c:2)
+      for offset_letter, offset_count in offset_vector.items():
+        letter_count_offsets[offset_letter] = letter_count_offsets.get(offset_letter, []) + [(offset_count, variable)]
 
   problem = pulp.LpProblem(name="Experiment_e", sense=pulp.LpMinimize)
 
@@ -306,10 +306,14 @@ def new_main():
   
   # For every letter we have a letter specific constraint
   for letter in alphabet:
+  # for letter in ['e']:
+  # for letter in []:
     # FIXME for ',' we need something extra
     offset_sum = sum([c * v for c, v in letter_count_offsets[letter]])
     weighted_variables = sum([-c * v for v, c in letter_variables_counts[letter].items()])
     problem += lower_bounds[letter] + offset_sum + weighted_variables == 0
+
+  print(letter_count_offsets['e'])
 
   problem.solve(solver=pulp.HiGHS())
 
@@ -318,7 +322,6 @@ def new_main():
     value = int(v.varValue)
     if value != 0:
       print(f"{v.name}={v.varValue}")
-      # print(f"{prefix + spell_number(e_variables[v])!r}")
 
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
