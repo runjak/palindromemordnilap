@@ -11,6 +11,7 @@ hundred = "hundred"
 thousand = "thousand"
 million = "million"
 billion = "billion"
+dash = '-'
 
 def spell_number(n: int) -> str:
   if n <= 0: return ''
@@ -20,7 +21,7 @@ def spell_number(n: int) -> str:
     below, recurse = below_hundred[(n - (n % 10)) // 10 - 2], spell_number(n % 10)
     if len(recurse) == 0:
       return below
-    return f"{below}-{recurse}"
+    return f"{below}{dash}{recurse}"
   if n < 1_000: return f"{single_digit[n // 100]} {hundred} {spell_number(n % 100)}"
   if n < 1_000_000: return f"{spell_number(n // 1_000)} {thousand} {spell_number(n % 1_000)}"
   if n < 1_000_000_000: return f"{spell_number(n // 1_000_000)} {million} {spell_number(n % 1_000_000)}"
@@ -48,8 +49,8 @@ def spell_output(chars: Vector, prefix=default_prefix, suffix=default_suffix) ->
 
 def get_alphabet(prefix: str, suffix: str) -> Alphabet:
   letters = "".join(single_digit + double_digit + below_hundred) 
-  letters += hundred  + thousand + million + billion
-  letters += spell_char('', 0) + spell_chars({}) + spell_instructions({}, prefix, suffix)
+  letters += dash + hundred  + thousand + million + billion
+  letters += spell_char('a', 1) + spell_chars({}) + spell_instructions({}, prefix, suffix)
   letters += prefix
   letters = "".join(letters.split())
   return sorted(list(set(letters)))
@@ -296,7 +297,7 @@ def new_main():
     for variable, count in choices.items(): # e_68, 68
       offset_vector = vector_scale(count_chars(spell_char(letter, count)), 2) # 2 * (achtundsechtzig es -> a:1, c:2)
       for offset_letter, offset_count in offset_vector.items():
-        letter_count_offsets[offset_letter] = letter_count_offsets.get(offset_letter, []) + [(offset_count, variable)]
+        letter_count_offsets[offset_letter].append((offset_count, variable))
 
   problem = pulp.LpProblem(name="Experiment_e", sense=pulp.LpMinimize)
 
@@ -306,8 +307,6 @@ def new_main():
   
   # For every letter we have a letter specific constraint
   for letter in alphabet:
-  # for letter in ['e']:
-  # for letter in []:
     # FIXME for ',' we need something extra
     offset_sum = sum([c * v for c, v in letter_count_offsets[letter]])
     weighted_variables = sum([-c * v for v, c in letter_variables_counts[letter].items()])
@@ -321,7 +320,7 @@ def new_main():
   for v in problem.variables():
     value = int(v.varValue)
     if value != 0:
-      print(f"{v.name}={v.varValue}")
+      print(f"{v.name}={value} ({v.varValue})")
 
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
