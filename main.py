@@ -273,6 +273,7 @@ def experiment_e():
       print(f"{prefix + spell_number(e_variables[v])!r}")
 
 def new_main():
+  print("new_main()\n")
   prefix = default_prefix
   suffix = default_suffix
 
@@ -282,11 +283,42 @@ def new_main():
   lower_bounds = {letter: 0 for letter in alphabet} | get_lower_bounds(prefix)
   upper_bounds = {letter: count + bound_delta for letter, count in lower_bounds.items()}
 
-  variables_to_counts = {}
-  letter_variables
+  letter_variables_counts = {letter: {pulp.LpVariable(name=f"{letter}_{count}", cat=pulp.LpBinary): count for count in range(lower_bounds[letter], upper_bounds[letter] + 1, 2)} for letter in alphabet}
+  
+  """
+  We map each letter to a list of tuples.
+  These tuples are weight, variable for every variable
+  that contributes to the offset count of a letter.
+  """
+  letter_count_offsets: dict[str, list[(int, pulp.LpVariable)]] = {letter: [] for letter in alphabet}
 
-  alphabet = get_alphabet(prefix, suffix)
-  None
+  for letter, choices in letter_variables_counts.items():
+    for variable, count in choices.items():
+      offset_vector = vector_scale(count_chars(spell_char(letter, count)), 2)
+      for offset_letter, offset_weight in offset_vector.items():
+        letter_count_offsets[letter].append((offset_weight, variable))
+
+  problem = pulp.LpProblem(name="Experiment_e", sense=pulp.LpMinimize)
+
+  # For every letter we chose exactly one count:
+  for letter, choices in letter_variables_counts.items():
+    problem += sum(choices.keys()) == 1, f"pick exactly one {letter!r}"
+  
+  # For every letter we have a letter specific constraint
+  for letter in alphabet:
+    # FIXME for ',' we need something extra
+    offset_sum = sum([c * v for c, v in letter_count_offsets[letter]])
+    weighted_variables = sum([-c * v for v, c in letter_variables_counts[letter].items()])
+    problem += lower_bounds[letter] + offset_sum + weighted_variables == 0
+
+  problem.solve(solver=pulp.HiGHS())
+
+  print(f"Problem status: {pulp.LpStatus[problem.status]}")
+  for v in problem.variables():
+    value = int(v.varValue)
+    if value != 0:
+      print(f"{v.name}={v.varValue}")
+      # print(f"{prefix + spell_number(e_variables[v])!r}")
 
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
