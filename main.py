@@ -160,7 +160,9 @@ def letter_constraints(alphabet_choices: dict[str, list[(int, pulp.LpVariable, V
 def print_problem(problem: pulp.LpProblem):
   print(f"Problem status: {pulp.LpStatus[problem.status]}")
   for v in problem.variables():
-    print(f"{v.name}={v.varValue}")
+    value = int(v.varValue)
+    if value != 0:
+      print(f"{v.name}={v.varValue}")
 
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
@@ -190,4 +192,3 @@ if __name__ == '__main__':
 
   problem.solve(solver=pulp.HiGHS())
   print_problem(problem)
-
