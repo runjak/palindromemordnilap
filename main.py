@@ -272,6 +272,24 @@ def experiment_e():
       print(f"{v.name}={v.varValue}")
       print(f"{prefix + spell_number(e_variables[v])!r}")
 
+def new_main():
+  prefix = default_prefix
+  suffix = default_suffix
+
+  alphabet = get_alphabet(prefix=prefix, suffix=suffix)
+  bound_delta = 100
+
+  lower_bounds = {letter: 0 for letter in alphabet} | get_lower_bounds(prefix)
+  upper_bounds = {letter: count + bound_delta for letter, count in lower_bounds.items()}
+
+  variables_to_counts = {}
+  letter_variables
+
+  alphabet = get_alphabet(prefix, suffix)
+  None
+
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
-  experiment_e()
+  # experiment_e()
+  new_main()
+  # main()
