@@ -90,7 +90,7 @@ def manhattan_distance(a: Vector, b: Vector) -> int:
 def count_chars(s: str) -> Vector:
   counts = {}
   for c in "".join(s.split()):
-    counts[c] = 1 + counts.get(c, 0)
+    counts[c] = counts.get(c, 0) + 1
   return counts
 
 def get_lower_bounds(prefix: str) -> Vector:
@@ -331,9 +331,74 @@ def explore():
   difference = {k: v - actual.get(k, 0) for k, v in solution.items()}
   print(f"difference is:\n{difference!r}")
 
+def thingy():
+  print("thingy()")
+  prefix = "Edwin would you believe it? This text has "
+  alphabet = get_alphabet(prefix=prefix, suffix="")
+
+  print(f"alphabet is: {alphabet!r}")
+  
+  bound_delta = 20
+  lower_bounds = {letter: 0 for letter in alphabet} | count_chars(f"{spell_instructions(chars={}, prefix=prefix, suffix="")}".strip())
+  upper_bounds = {letter: count + bound_delta for letter, count in lower_bounds.items()}
+  
+  letter_variables_counts = {
+    letter: {
+      pulp.LpVariable(name=f"{letter if letter != '-' else '_'}_{count}", cat=pulp.LpBinary): count
+      for count in range(lower_bounds[letter], upper_bounds[letter] + 1)}
+    for letter in alphabet}
+
+  print(f"{letter_variables_counts['E']!r}\n{prefix}")
+  
+  variable_letter_counts = {
+    variable: (letter, count)
+    for letter, choices in letter_variables_counts.items()
+    for variable, count in choices.items()}
+
+  """
+  We map each letter to a list of tuples.
+  These tuples are weight, variable for every variable
+  that contributes to the offset count of a letter.
+  """
+  letter_count_offsets: dict[str, list[(int, pulp.LpVariable)]] = {letter: [] for letter in alphabet}
+
+  for letter, choices in letter_variables_counts.items():
+    for variable, count in choices.items():
+      offset_vector = count_chars(spell_char(letter, count))
+      for offset_letter, offset_count in offset_vector.items():
+        letter_count_offsets[offset_letter].append((offset_count, variable))
+  
+  print(f"Whatever:\n{letter_variables_counts['E']}\n{letter_count_offsets['E']}")
+  
+  problem = pulp.LpProblem(name="thingy", sense=pulp.LpMinimize)
+
+  # For every letter we chose exactly one count:
+  for letter, choices in letter_variables_counts.items():
+    problem += sum(choices.keys()) == 1, f"pick exactly one {letter!r}"
+  
+  # For every letter we have a letter specific constraint
+  for letter in alphabet:
+  # for letter in ['E', 'T']:
+  # for letter in ['E']:
+    # FIXME for ',' we need something extra
+    offset_sum = sum([c * v for c, v in letter_count_offsets[letter]])
+    weighted_variables = sum([-c * v for v, c in letter_variables_counts[letter].items()])
+    problem += offset_sum + weighted_variables == 0
+
+  problem.solve(solver=pulp.HiGHS())
+
+  print(f"Problem status: {pulp.LpStatus[problem.status]}")
+  for v in problem.variables():
+    value = int(v.varValue)
+    if value != 0:
+      print(f"{v.name}={value} ({v.varValue})")
+
+  None
+
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
   # experiment_e()
   # new_main()
-  explore()
+  # explore()
+  thingy()
   # main()
