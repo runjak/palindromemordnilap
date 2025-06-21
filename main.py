@@ -336,8 +336,6 @@ def thingy():
   prefix = "Edwin would you believe it? This text has "
   alphabet = get_alphabet(prefix=prefix, suffix="")
 
-  print(f"alphabet is: {alphabet!r}")
-  
   bound_delta = 20
   lower_bounds = {letter: 0 for letter in alphabet} | count_chars(f"{spell_instructions(chars={}, prefix=prefix, suffix="")}".strip())
   upper_bounds = {letter: count + bound_delta for letter, count in lower_bounds.items()}
@@ -348,8 +346,6 @@ def thingy():
       for count in range(lower_bounds[letter], upper_bounds[letter] + 1)}
     for letter in alphabet}
 
-  print(f"{letter_variables_counts['E']!r}\n{prefix}")
-  
   variable_letter_counts = {
     variable: (letter, count)
     for letter, choices in letter_variables_counts.items()
@@ -368,8 +364,6 @@ def thingy():
       for offset_letter, offset_count in offset_vector.items():
         letter_count_offsets[offset_letter].append((offset_count, variable))
   
-  print(f"Whatever:\n{letter_variables_counts['E']}\n{letter_count_offsets['E']}")
-  
   problem = pulp.LpProblem(name="thingy", sense=pulp.LpMinimize)
 
   # For every letter we chose exactly one count:
@@ -377,21 +371,21 @@ def thingy():
     problem += sum(choices.keys()) == 1, f"pick exactly one {letter!r}"
   
   # For every letter we have a letter specific constraint
-  for letter in alphabet:
-  # for letter in ['E', 'T']:
-  # for letter in ['E']:
+  # for letter in alphabet:
+  for letter in ['E', 'T', 'e']:
     # FIXME for ',' we need something extra
     offset_sum = sum([c * v for c, v in letter_count_offsets[letter]])
     weighted_variables = sum([-c * v for v, c in letter_variables_counts[letter].items()])
+    print(f"For letter {letter!r}:\n\toffset_sum={offset_sum!r}\n\tweighted_variables={weighted_variables!r}")
     problem += offset_sum + weighted_variables == 0
 
   problem.solve(solver=pulp.HiGHS())
 
   print(f"Problem status: {pulp.LpStatus[problem.status]}")
-  for v in problem.variables():
-    value = int(v.varValue)
-    if value != 0:
-      print(f"{v.name}={value} ({v.varValue})")
+  solution = dict([variable_letter_counts[variable] for variable in problem.variables() if int(variable.varValue) != 0])
+  print(f"solution: {solution}")
+  spelled_solution = spell_instructions(chars=solution, prefix=prefix, suffix="")
+  print(f"spelled_solution:\n\t{spelled_solution}")
 
   None
 
