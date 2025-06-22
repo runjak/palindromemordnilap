@@ -198,10 +198,10 @@ def new_main():
     }
 
     """
-  We map each letter to a list of tuples.
-  These tuples are weight, variable for every variable
-  that contributes to the offset count of a letter.
-  """
+    We map each letter to a list of tuples.
+    These tuples are weight, variable for every variable
+    that contributes to the offset count of a letter.
+    """
     letter_count_offsets: dict[str, list[(int, pulp.LpVariable)]] = {
         letter: [] for letter in alphabet
     }
@@ -292,8 +292,8 @@ def thingy():
 
     # For every letter we have a letter specific constraint
     # for letter in alphabet:
-    # for letter in ['E', 'T', 'e']:
-    for letter in ["e"]:
+    goals = ['E', 'd', 'w', 'i', 'n', 'T', 'e', 's']
+    for letter in goals:
         # FIXME for ',' we need something extra
         offset_sum = sum([c * v for c, v in letter_count_offsets[letter]])
         weighted_variables = sum(
@@ -302,7 +302,7 @@ def thingy():
         print(
             f"For letter {letter!r}:\n\toffset_sum={offset_sum!r}\n\tweighted_variables={weighted_variables!r}"
         )
-        problem += offset_sum + weighted_variables == 0
+        problem += lower_bounds[letter] + offset_sum + weighted_variables == 0
 
     problem.solve(solver=pulp.HiGHS())
 
@@ -319,9 +319,8 @@ def thingy():
     print(f"spelled_solution:\n\t{spelled_solution}")
     actual_count = count_chars(spelled_solution)
 
-    print(
-        f"Count of 'e's:\n\tactual: {actual_count.get('e',0)}\n\texpected: {solution.get('e',0)}"
-    )
+    actual_expected = {letter: (actual_count.get(letter, 0),solution.get(letter, 0)) for letter in goals}
+    print(f"letter: actual, expected:\n\t{actual_expected}")
 
 
 if __name__ == "__main__":
