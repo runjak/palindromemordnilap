@@ -1,0 +1,8 @@
+Problem status: Optimal
+solution: {'?': 2, 'E': 2, 'T': 2, '-': 6, 'a': 3, 'b': 2, 'd': 4, 'f': 8, 'g': 3, 'h': 10, 'l': 4, 'm': 0, 'n': 15, 'o': 11, 's': 34, 'u': 7, 'w': 10, 'x': 5, 'y': 7, '❛': 26, '❜': 26}
+spelled_solution:
+        Edwin would you believe it? This text has two ❛?❜s, two ❛E❜s, two ❛T❜s, six ❛-❜s, three ❛a❜s, two ❛b❜s, four ❛d❜s, eight ❛f❜s, three ❛g❜s, ten ❛h❜s, four ❛l❜s, fifteen ❛n❜s, eleven ❛o❜s, thirty-four ❛s❜s, seven ❛u❜s, ten ❛w❜s, five ❛x❜s, seven ❛y❜s, twenty-six ❛❛❜s and twenty-six ❛❜❜s
+letter: actual, expected:
+        {'-': (4, 6), '?': (2, 2), 'E': (2, 2), 'T': (2, 2), 'a': (3, 3), 'b': (2, 2), 'd': (4, 4), 'e': (23, 0), 'f': (7, 8), 'g': (2, 3), 'h': (7, 10), 'i': (11, 0), 'l': (4, 4), 'm': (0, 0), 'n': (11, 15), 'o': (10, 11), 'r': (6, 0), 's': (28, 34), 't': (19, 0), 'u': (6, 7), 'v': (5, 0), 'w': (9, 10), 'x': (5, 5), 'y': (5, 7), '❛': (21, 26), '❜': (21, 26)}
+
+took 19m51s 

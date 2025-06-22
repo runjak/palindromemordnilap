@@ -245,7 +245,7 @@ def thingy():
     prefix = "Edwin would you believe it? This text has "
     alphabet = get_alphabet(prefix=prefix, suffix="")
 
-    bound_delta = 20
+    bound_delta = 100
     lower_bounds = {letter: 0 for letter in alphabet} | count_chars(
         f"{spell_instructions(chars={}, prefix=prefix, suffix="")}".strip()
     )
@@ -292,19 +292,41 @@ def thingy():
 
     # For every letter we have a letter specific constraint
     # for letter in alphabet:
-    goals = ['E', 'd', 'w', 'i', 'n', 'T', 'e', 's']
+    goals = [
+        "E",
+        "d",
+        "w",
+        "i",
+        "n",
+        "o",
+        "u",
+        "l",
+        "y",
+        "u",
+        "b",
+        "e",
+        "v",
+        "t",
+        "?",
+        "T",
+        "h",
+        "a",
+        "s",
+        "x",
+        # "❛",
+        # "❜",
+    ]
+    goals = set(alphabet) - set(["❛", "❜", ",", "-", "v", "f", "r"])
+    goals = alphabet
     for letter in goals:
         # FIXME for ',' we need something extra
         offset_sum = sum([c * v for c, v in letter_count_offsets[letter]])
         weighted_variables = sum(
             [-c * v for v, c in letter_variables_counts[letter].items()]
         )
-        print(
-            f"For letter {letter!r}:\n\toffset_sum={offset_sum!r}\n\tweighted_variables={weighted_variables!r}"
-        )
         problem += lower_bounds[letter] + offset_sum + weighted_variables == 0
 
-    problem.solve(solver=pulp.HiGHS())
+    problem.solve(solver=pulp.HiGHS(threads=6))
 
     print(f"Problem status: {pulp.LpStatus[problem.status]}")
     solution = dict(
@@ -319,7 +341,10 @@ def thingy():
     print(f"spelled_solution:\n\t{spelled_solution}")
     actual_count = count_chars(spelled_solution)
 
-    actual_expected = {letter: (actual_count.get(letter, 0),solution.get(letter, 0)) for letter in goals}
+    actual_expected = {
+        letter: (actual_count.get(letter, 0), solution.get(letter, 0))
+        for letter in goals
+    }
     print(f"letter: actual, expected:\n\t{actual_expected}")
 
 
