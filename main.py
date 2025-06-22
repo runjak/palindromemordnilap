@@ -385,6 +385,24 @@ def absolute_example():
         print(f"{v.name} = {value}")
 
 
+def abs(x: pulp.LpVariable, y: pulp.LpVariable) -> (pulp.LpVariable, list[pulp.LpConstraint]):
+    """
+    By introducing a help variable 'delta',
+    we can compute the absolute difference between two values.
+    The 'trick' is that we constrain the variable to be >= the linear parts of the absolute value.
+    Hence the result is a tuple of the new variable alongside the implied constraints. 
+    """
+    delta = pulp.LpVariable(name=f"delta_({x})_({y})", lowBound=0, cat=pulp.LpInteger)
+
+    constraints = [
+        delta >= x - y,
+        delta >= -(x - y),
+    ]
+
+    return (delta, constraints)
+
+
+
 if __name__ == "__main__":
     # print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
     # experiment_e()
