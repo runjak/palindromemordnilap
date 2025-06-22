@@ -107,10 +107,7 @@ def vector_scale(vector: Vector, factor: int) -> Vector:
 
 
 def count_chars(s: str) -> Vector:
-    counts = {}
-    for c in "".join(s.split()):
-        counts[c] = counts.get(c, 0) + 1
-    return counts
+    return {c: s.count(c) for c in set("".join(s.split()))}
 
 
 def implies(a: pulp.LpVariable, b: pulp.LpVariable) -> pulp.LpConstraint:
@@ -328,7 +325,7 @@ def thingy():
 
 
 if __name__ == "__main__":
-    print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
+    # print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
     # experiment_e()
     # new_main()
     thingy()
