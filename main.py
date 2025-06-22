@@ -402,6 +402,23 @@ def abs(x: pulp.LpVariable, y: pulp.LpVariable) -> (pulp.LpVariable, list[pulp.L
     return (delta, constraints)
 
 
+def manhattan(xys: list[(pulp.LpVariable, pulp.LpVariable)]) -> (pulp.LpConstraint, list[pulp.LpConstraint]):
+    """
+    Construct a tuple of (optimization_goal, constraints) where:
+    - optimization_goal computes the manhattan distance of the tuples provided in xys.
+    - constraints is a list of additional problem constraints produced from helper variables.
+    """
+    deltas = []
+    constraints = []
+
+    for (x, y) in xys:
+        (delta, cs) = abs(x, y)
+        deltas.append(delta)
+        constraints += cs
+    
+    return (sum(deltas), constraints)
+
+
 
 if __name__ == "__main__":
     # print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
