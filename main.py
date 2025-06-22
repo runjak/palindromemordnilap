@@ -386,8 +386,9 @@ def thingy():
   print(f"solution: {solution}")
   spelled_solution = spell_instructions(chars=solution, prefix=prefix, suffix="")
   print(f"spelled_solution:\n\t{spelled_solution}")
+  actual_count = count_chars(spelled_solution)
 
-  None
+  print(f"Count of 'e's:\n\tactual: {actual_count.get('e',0)}\n\texpected: {solution.get('e',0)}")
 
 if __name__ == '__main__':
   print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
