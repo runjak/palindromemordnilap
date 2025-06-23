@@ -484,7 +484,6 @@ def experiment_manhattan():
     - The offset: all other letters that play towards a letter
     """
     manhattan_pairs: list[(pulp.LpVariable, pulp.LpVariable)] = []
-    letter_constraints: dict[str, pulp.LpConstraint] = {}
     for letter, choices in letter_variables_counts.items():
         # FIXME what to do with ','?
         offset_sum = lower_bounds[letter] + sum(
@@ -495,9 +494,6 @@ def experiment_manhattan():
         )
 
         manhattan_pairs.append((offset_count, weighted_variables))
-        # FIXME these constraints are broken in some way
-        # letter_constraints[letter] = offset_sum <= weighted_variables
-        print(f"letter_constraint for {letter!r}:\n\t{offset_sum <= weighted_variables}")
 
     problem = pulp.LpProblem(name="manhattan", sense=pulp.LpMinimize)
 
@@ -510,8 +506,13 @@ def experiment_manhattan():
     for letter, choices in letter_variables_counts.items():
         problem += sum(choices.keys()) == 1, f"pick exactly one {letter!r}"
 
-    for constraint in letter_constraints:
-        problem += constraint
+    for letter, choices in letter_variables_counts.items():
+        # FIXME for ',' we need something extra
+        offset_sum = sum([c * v for c, v in letter_count_offsets[letter]])
+        weighted_variables = sum(
+            [c * v for v, c in letter_variables_counts[letter].items()]
+        )
+        problem += lower_bounds[letter] + offset_sum <= weighted_variables
 
     problem.solve(solver=pulp.HiGHS())
 
