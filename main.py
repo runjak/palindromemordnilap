@@ -85,9 +85,7 @@ def spell_instructions(chars: Vector, prefix: str) -> str:
 def get_alphabet(prefix: str) -> Alphabet:
     letters = "".join(single_digit + double_digit + below_hundred)
     letters += dash + hundred + thousand + million + billion
-    letters += (
-        spell_char("a", 1) + spell_chars({}) + spell_instructions({}, prefix)
-    )
+    letters += spell_char("a", 1) + spell_chars({}) + spell_instructions({}, prefix)
     letters += prefix
     letters = "".join(letters.split())
     return sorted(list(set(letters)))
@@ -248,6 +246,20 @@ def get_bounds(
     return (lower_bounds, upper_bounds)
 
 
+def get_letters_to_variables_to_counts(
+    alphabet: Alphabet, lower_bounds: dict[str, int], upper_bounds: dict[str, int]
+) -> dict[str, dict[pulp.LpVariable, int]]:
+    return {
+        letter: {
+            pulp.LpVariable(
+                name=f"{letter if letter != '-' else '_'}_{count}", cat=pulp.LpBinary
+            ): count
+            for count in range(lower_bounds[letter], upper_bounds[letter] + 1)
+        }
+        for letter in alphabet
+    }
+
+
 def experiment_manhattan():
     """
     This experiment is about optimizing the manhattan distance
@@ -268,15 +280,9 @@ def experiment_manhattan():
         prefix=prefix, alphabet=alphabet, bound_delta=50
     )
 
-    letter_variables_counts: dict[str, dict[pulp.LpVariable, int]] = {
-        letter: {
-            pulp.LpVariable(
-                name=f"{letter if letter != '-' else '_'}_{count}", cat=pulp.LpBinary
-            ): count
-            for count in range(lower_bounds[letter], upper_bounds[letter] + 1)
-        }
-        for letter in alphabet
-    }
+    letter_variables_counts = get_letters_to_variables_to_counts(
+        alphabet=alphabet, lower_bounds=lower_bounds, upper_bounds=upper_bounds
+    )
 
     variable_letter_counts: dict[pulp.LpVariable, (str, int)] = {
         variable: (letter, count)
