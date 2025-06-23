@@ -78,14 +78,10 @@ def spell_chars(chars: Vector) -> str:
     return f"{", ".join(parts)} and {last}"
 
 
-def spell_instructions(chars: Vector, prefix: str) -> str:
-    return f"{prefix}{spell_chars(chars)}".strip()
-
-
 def get_alphabet(prefix: str) -> Alphabet:
     letters = "".join(single_digit + double_digit + below_hundred)
     letters += dash + hundred + thousand + million + billion
-    letters += spell_char("a", 1) + spell_chars({}) + spell_instructions({}, prefix)
+    letters += spell_char("a", 1) + spell_chars({})
     letters += prefix
     letters = "".join(letters.split())
     return sorted(list(set(letters)))
@@ -353,7 +349,7 @@ def experiment_manhattan():
         ]
     )
     print(f"solution: {solution}")
-    spelled_solution = spell_instructions(chars=solution, prefix=prefix)
+    spelled_solution = f"{prefix}{spell_chars(chars=solution)}"
     print(f"spelled_solution:\n\t{spelled_solution}")
     actual_count = count_chars(spelled_solution)
 
