@@ -436,6 +436,7 @@ def experiment_manhattan():
     """
     print("experiment_manhattan()")
     prefix = "I think that I shall never see a graph more lovely than a tree. A tree whose particular property is loop-free connectivity."
+    prefix = "test "
     alphabet = get_alphabet(prefix=prefix, suffix="")
 
     bound_delta = 50
@@ -512,7 +513,7 @@ def experiment_manhattan():
         weighted_variables = sum(
             [c * v for v, c in letter_variables_counts[letter].items()]
         )
-        problem += lower_bounds[letter] + offset_sum <= weighted_variables
+        problem += lower_bounds[letter] + offset_sum == weighted_variables
 
     problem.solve(solver=pulp.HiGHS())
 
