@@ -348,7 +348,7 @@ def thingy():
     print(f"letter: actual, expected:\n\t{actual_expected}")
 
 
-def absolute_example():
+def experiment_absolute():
     """
     We're interesting in minimizing an absolute value.
     Let's try our hands at that.
@@ -385,12 +385,14 @@ def absolute_example():
         print(f"{v.name} = {value}")
 
 
-def abs(x: pulp.LpVariable, y: pulp.LpVariable) -> (pulp.LpVariable, list[pulp.LpConstraint]):
+def abs(
+    x: pulp.LpVariable, y: pulp.LpVariable
+) -> (pulp.LpVariable, list[pulp.LpConstraint]):
     """
     By introducing a help variable 'delta',
     we can compute the absolute difference between two values.
     The 'trick' is that we constrain the variable to be >= the linear parts of the absolute value.
-    Hence the result is a tuple of the new variable alongside the implied constraints. 
+    Hence the result is a tuple of the new variable alongside the implied constraints.
     """
     delta = pulp.LpVariable(name=f"delta_({x})_({y})", lowBound=0, cat=pulp.LpInteger)
 
@@ -402,7 +404,9 @@ def abs(x: pulp.LpVariable, y: pulp.LpVariable) -> (pulp.LpVariable, list[pulp.L
     return (delta, constraints)
 
 
-def manhattan(xys: list[(pulp.LpVariable, pulp.LpVariable)]) -> (pulp.LpConstraint, list[pulp.LpConstraint]):
+def manhattan(
+    xys: list[(pulp.LpVariable, pulp.LpVariable)]
+) -> (pulp.LpConstraint, list[pulp.LpConstraint]):
     """
     Construct a tuple of (optimization_goal, constraints) where:
     - optimization_goal computes the manhattan distance of the tuples provided in xys.
@@ -411,13 +415,124 @@ def manhattan(xys: list[(pulp.LpVariable, pulp.LpVariable)]) -> (pulp.LpConstrai
     deltas = []
     constraints = []
 
-    for (x, y) in xys:
+    for x, y in xys:
         (delta, cs) = abs(x, y)
         deltas.append(delta)
         constraints += cs
-    
+
     return (sum(deltas), constraints)
 
+
+def experiment_manhattan():
+    """
+    This experiment is about optimizing the manhattan distance
+    between chosen assignments of letter counts and actual ones.
+
+    The idea is that we modify our counting to allow for bigger-than-actual numbers.
+    Relaxing this constraint allows us to find near-solutions and to go from there.
+
+    It also means that we'll need to diligently gather constraints up front
+    and add them to the problem in the right order so that our optimization target is added first.
+    """
+    print("experiment_manhattan()")
+    prefix = "I think that I shall never see a graph more lovely than a tree. A tree whose particular property is loop-free connectivity."
+    alphabet = get_alphabet(prefix=prefix, suffix="")
+
+    bound_delta = 50
+    lower_bounds: dict[str, int] = {letter: 0 for letter in alphabet} | count_chars(
+        f"{spell_instructions(chars={}, prefix=prefix, suffix="")}".strip()
+    )
+    upper_bounds: dict[str, int] = {
+        letter: count + bound_delta for letter, count in lower_bounds.items()
+    }
+
+    letter_variables_counts: dict[str, dict[pulp.LpVariable, int]] = {
+        letter: {
+            pulp.LpVariable(
+                name=f"{letter if letter != '-' else '_'}_{count}", cat=pulp.LpBinary
+            ): count
+            for count in range(lower_bounds[letter], upper_bounds[letter] + 1)
+        }
+        for letter in alphabet
+    }
+
+    variable_letter_counts: dict[pulp.LpVariable, (str, int)] = {
+        variable: (letter, count)
+        for letter, choices in letter_variables_counts.items()
+        for variable, count in choices.items()
+    }
+
+    """
+    We map each letter to a list of tuples.
+    These tuples are weight, variable for every variable
+    that contributes to the offset count of a letter.
+    """
+    letter_count_offsets: dict[str, list[(int, pulp.LpVariable)]] = {
+        letter: [] for letter in alphabet
+    }
+
+    for letter, choices in letter_variables_counts.items():
+        for variable, count in choices.items():
+            offset_vector = count_chars(spell_char(letter, count))
+            for offset_letter, offset_count in offset_vector.items():
+                letter_count_offsets[offset_letter].append((offset_count, variable))
+
+    """
+    For every letter:
+    - The lower bound: does this play into it or is it subsumed in the variable already?
+    - The weighted variable: binary variable of a letter multiplied by accompanying count
+    - The offset: all other letters that play towards a letter
+    """
+    manhattan_pairs: list[(pulp.LpVariable, pulp.LpVariable)] = []
+    letter_constraints: dict[str, pulp.LpConstraint] = {}
+    for letter, choices in letter_variables_counts.items():
+        # FIXME what to do with ','?
+        offset_sum = lower_bounds[letter] + sum(
+            [c * v for c, v in letter_count_offsets[letter]]
+        )
+        weighted_variables = sum(
+            [c * v for v, c in letter_variables_counts[letter].items()]
+        )
+
+        manhattan_pairs.append((offset_count, weighted_variables))
+        # FIXME these constraints are broken in some way
+        # letter_constraints[letter] = offset_sum <= weighted_variables
+        print(f"letter_constraint for {letter!r}:\n\t{offset_sum <= weighted_variables}")
+
+    problem = pulp.LpProblem(name="manhattan", sense=pulp.LpMinimize)
+
+    (manhattan_goal, manhattan_constraints) = manhattan(manhattan_pairs)
+    problem += manhattan_goal
+    for constraint in manhattan_constraints:
+        problem += constraint
+
+    # For every letter we chose exactly one count:
+    for letter, choices in letter_variables_counts.items():
+        problem += sum(choices.keys()) == 1, f"pick exactly one {letter!r}"
+
+    for constraint in letter_constraints:
+        problem += constraint
+
+    problem.solve(solver=pulp.HiGHS())
+
+    print(f"Problem status: {pulp.LpStatus[problem.status]}")
+    solution = dict(
+        [
+            variable_letter_counts[variable]
+            for variable in problem.variables()
+            if int(variable.varValue) != 0 and variable in variable_letter_counts
+        ]
+    )
+    print(f"solution: {solution}")
+    spelled_solution = spell_instructions(chars=solution, prefix=prefix, suffix="")
+    print(f"spelled_solution:\n\t{spelled_solution}")
+    actual_count = count_chars(spelled_solution)
+
+    actual_expected = {
+        letter: (actual_count.get(letter, 0), solution.get(letter, 0))
+        for letter in alphabet
+    }
+    print(f"letter: actual, expected:\n\t{actual_expected}")
 
 
 if __name__ == "__main__":
@@ -425,4 +540,5 @@ if __name__ == "__main__":
     # experiment_e()
     # new_main()
     # thingy()
-    absolute_example()
+    # experiment_absolute()
+    experiment_manhattan()
