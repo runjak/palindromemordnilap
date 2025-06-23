@@ -207,10 +207,8 @@ def new_main():
     }
 
     for letter, choices in letter_variables_counts.items():
-        for variable, count in choices.items():  # e_68, 68
-            offset_vector = vector_scale(
-                count_chars(spell_char(letter, count)), 2
-            )  # 2 * (achtundsechtzig es -> a:1, c:2)
+        for variable, count in choices.items():
+            offset_vector = vector_scale(count_chars(spell_char(letter, count)), 2)
             for offset_letter, offset_count in offset_vector.items():
                 letter_count_offsets[offset_letter].append((offset_count, variable))
 
@@ -423,6 +421,18 @@ def manhattan(
     return (sum(deltas), constraints)
 
 
+def get_bounds(
+    prefix: str, alphabet: Alphabet, bound_delta: int
+) -> (dict[str, int], dict[str, int]):
+    lower_bounds: dict[str, int] = {letter: 0 for letter in alphabet} | count_chars(
+        prefix
+    )
+    upper_bounds: dict[str, int] = {
+        letter: count + bound_delta for letter, count in lower_bounds.items()
+    }
+    return (lower_bounds, upper_bounds)
+
+
 def experiment_manhattan():
     """
     This experiment is about optimizing the manhattan distance
@@ -439,13 +449,9 @@ def experiment_manhattan():
     prefix = "test "
     alphabet = get_alphabet(prefix=prefix, suffix="")
 
-    bound_delta = 50
-    lower_bounds: dict[str, int] = {letter: 0 for letter in alphabet} | count_chars(
-        f"{spell_instructions(chars={}, prefix=prefix, suffix="")}".strip()
+    (lower_bounds, upper_bounds) = get_bounds(
+        prefix=prefix, alphabet=alphabet, bound_delta=50
     )
-    upper_bounds: dict[str, int] = {
-        letter: count + bound_delta for letter, count in lower_bounds.items()
-    }
 
     letter_variables_counts: dict[str, dict[pulp.LpVariable, int]] = {
         letter: {
