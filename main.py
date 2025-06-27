@@ -113,48 +113,6 @@ def implies(a: pulp.LpVariable, b: pulp.LpVariable) -> pulp.LpConstraint:
     return a - b <= 0
 
 
-def experiment_e():
-    print("Experiment e\n")
-
-    prefix = "The number of e's in this text is: "
-    lower_limit = count_chars(prefix).get("e", 0)
-    upper_limit = lower_limit + 4
-
-    print(
-        f"Choosing 'e' count from [{lower_limit}, {upper_limit}] for 'e's in\n\t{prefix!r}"
-    )
-
-    e_variables = {
-        pulp.LpVariable(name=f"e_{count}", cat=pulp.LpBinary): count
-        for count in range(lower_limit, upper_limit + 1)
-    }
-
-    e_offsets = {
-        count: count_chars(spell_number(count)).get("e", 0)
-        for count in e_variables.values()
-    }
-    print(f"e_offsets:{e_offsets!r}")
-    total_number_of_e_s = lower_limit + sum([c * v for v, c in e_variables.items()])
-
-    problem = pulp.LpProblem(name="Experiment_e", sense=pulp.LpMinimize)
-
-    # Make sure we choose only one count:
-    problem += sum(e_variables.keys()) == 1, "pick exactly one 'e'"
-
-    # Construct e count constraint
-    offset_sum = sum([e_offsets.get(c, 0) * v for v, c in e_variables.items()])
-    weighted_variables = sum([-c * v for v, c in e_variables.items()])
-    problem += lower_limit + offset_sum + weighted_variables == 0
-
-    problem.solve(solver=pulp.HiGHS())
-    print(f"Problem status: {pulp.LpStatus[problem.status]}")
-    for v in problem.variables():
-        value = int(v.varValue)
-        if value != 0:
-            print(f"{v.name}={v.varValue}")
-            print(f"{prefix + spell_number(e_variables[v])!r}")
-
-
 def experiment_absolute():
     """
     We're interesting in minimizing an absolute value.
@@ -293,6 +251,57 @@ def experiment_manhattan():
     print("\n".join([f"\t{v.name} = {v.varValue}" for v in [x1, x2, x3, y1, y2, y3]]))
 
 
+def experiment_e():
+    print("Experiment e\n")
+
+    prefix = "The number of e's in this text is: "
+    lower_limit = count_chars(prefix).get("e", 0)
+    upper_limit = lower_limit + 4
+
+    print(
+        f"Choosing 'e' count from [{lower_limit}, {upper_limit}] for 'e's in\n\t{prefix!r}"
+    )
+
+    e_variables = {
+        pulp.LpVariable(name=f"e_{count}", cat=pulp.LpBinary): count
+        for count in range(lower_limit, upper_limit + 1)
+    }
+
+    e_offsets = {
+        count: count_chars(spell_number(count)).get("e", 0)
+        for count in e_variables.values()
+    }
+    print(f"e_offsets:{e_offsets!r}")
+    total_number_of_e_s = lower_limit + sum([c * v for v, c in e_variables.items()])
+
+    problem = pulp.LpProblem(name="Experiment_e", sense=pulp.LpMinimize)
+
+    # Make sure we choose only one count:
+    problem += sum(e_variables.keys()) == 1, "pick exactly one 'e'"
+
+    # Construct e count constraint
+    offset_sum = sum([e_offsets.get(c, 0) * v for v, c in e_variables.items()])
+    weighted_variables = sum([-c * v for v, c in e_variables.items()])
+    problem += lower_limit + offset_sum + weighted_variables == 0
+
+    problem.solve(solver=pulp.HiGHS())
+    print(f"Problem status: {pulp.LpStatus[problem.status]}")
+    for v in problem.variables():
+        value = int(v.varValue)
+        if value != 0:
+            print(f"{v.name}={v.varValue}")
+            print(f"{prefix + spell_number(e_variables[v])!r}")
+
+
+def experiment_two_letters():
+    """
+    We attempt to reformulate experiment_e to count two distinct letters.
+    """
+    print('experiment_two_letters()')
+    prefix = "The number of e's and f's this text is:\n\t"
+    lower_limits = count_chars(prefix)
+
+
 def experiment_last():
     """
     This experiment is about optimizing the manhattan distance
@@ -400,6 +409,7 @@ def experiment_last():
 if __name__ == "__main__":
     # print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
     # experiment_e()
+    experiment_two_letters()
     # experiment_absolute()
-    experiment_manhattan()
+    # experiment_manhattan()
     # experiment_last()
