@@ -293,13 +293,13 @@ def experiment_e():
             print(f"{prefix + spell_number(e_variables[v])!r}")
 
 
-def experiment_two_letters():
+def experiment_multiple_letters():
     """
-    We attempt to reformulate experiment_e to count two distinct letters.
+    We attempt to reformulate experiment_e to count multiple distinct letters.
     """
-    print("experiment_two_letters()")
-    letters = ["e", "f"]
-    prefix = "The number of e's and f's this text is:\n\t"
+    print("experiment_multiple_letters()")
+    letters = ["e", "f", "t", "h"]
+    prefix = f"The number of {", ".join(f"❛{l}❜s" for l in letters)} in this text is:\n\t"
     lower_bounds = {k: v for k, v in count_chars(prefix).items() if k in letters}
     delta = 10
     upper_bounds = {k: v + delta for k, v in lower_bounds.items()}
@@ -323,7 +323,7 @@ def experiment_two_letters():
                 if offset_letter in offsets:
                     offsets[offset_letter].append((offset_count, variable))
 
-    problem = pulp.LpProblem(name="Experiment_two_letters", sense=pulp.LpMinimize)
+    problem = pulp.LpProblem(name="Experiment_multiple_letters", sense=pulp.LpMinimize)
 
     for letter, choices in variables.items():
         problem += (
@@ -466,7 +466,7 @@ def experiment_last():
 if __name__ == "__main__":
     # print(f"pulp got these solvers: {pulp.listSolvers(True)!r}")
     # experiment_e()
-    experiment_two_letters()
+    experiment_multiple_letters()
     # experiment_absolute()
     # experiment_manhattan()
     # experiment_last()
