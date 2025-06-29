@@ -327,7 +327,7 @@ def experiment_two_letters():
 
     for letter, choices in variables.items():
         problem += (
-            sum([variable for variable, _ in choices.items()]) == 0,
+            sum([variable for variable, _ in choices.items()]) == 1,
             f"Pick exactly one {letter!r}",
         )
 
@@ -349,7 +349,14 @@ def experiment_two_letters():
         value = int(v.varValue)
         if value != 0:
             print(f"{v.name}={v.varValue}")
-            print(f"{prefix + spell_number(e_variables[v])!r}")
+
+    counts: dict[str, int] = {}
+    for letter, choices in variables.items():
+        for variable, count in choices.items():
+            if int(variable.varValue) > 0:
+                counts[letter] = count
+
+    print(f"{prefix}{spell_chars(counts)}")
 
 
 def experiment_last():
