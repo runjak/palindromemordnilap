@@ -83,6 +83,7 @@ def get_alphabet(prefix: str) -> Alphabet:
     letters += dash + hundred + thousand + million + billion
     letters += spell_char("a", 1) + spell_chars({})
     letters += prefix
+    letters += ','
     letters = "".join(letters.split())
     return sorted(list(set(letters)))
 

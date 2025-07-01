@@ -10,7 +10,7 @@ def experiment_alphabet():
     """
     prefix = f"This text contains the following letters:\n"
     letters = get_alphabet(prefix=prefix)
-    lower_bounds = {l: 0 for l in letters} | count_chars(prefix)
+    lower_bounds = {l: 0 for l in letters} | count_chars(prefix + "and")
     delta = 50
     upper_bounds = {k: v + delta for k, v in lower_bounds.items()}
 
@@ -48,8 +48,23 @@ def experiment_alphabet():
 
         offset_sum = sum([weight * variable for weight, variable in offsets[letter]])
 
+        comma_correction = 0
+        if letter == ",":
+            # comma correction should be set to the sum of all variables minus two
+            comma_correction = (
+                sum(
+                    [
+                        variable
+                        for letter in letters
+                        for (variable, count) in variables[letter].items()
+                        if count != 0
+                    ]
+                )
+                - 2
+            )
+
         problem += (
-            lower_bounds[letter] + offset_sum - weighted_choice == 0,
+            comma_correction + lower_bounds[letter] + offset_sum - weighted_choice == 0,
             f"Count of {letter} is balanced",
         )
 
@@ -101,14 +116,14 @@ Count differences (expected - actual):
  '❜': 1, 'd': -1, '❛': 1,
  'c': 0, 'm': 0,
  'a': -1}
-"""
 
-"""
-Notable problems:
+After some changes I get this output instead:
 
-I see the following issues:
-- We disregard the 'and'.
-- We disregard the ',' separators.
-- We don't include all chars in our starting alphabet - such as 'v'.
-- Maybe there's more
+This text contains the following letters:
+twenty-five ❛,❜s, seven ❛-❜s, two ❛:❜s, two ❛T❜s, three ❛a❜s,
+two ❛c❜s, two ❛d❜s, four ❛g❜s, twelve ❛h❜s, one ❛m❜s, eighteen ❛n❜s,
+thirteen ❛o❜s, thirteen ❛r❜s, thirty-six ❛s❜s, four ❛u❜s, eleven ❛v❜s,
+twelve ❛w❜s, seven ❛y❜s, twenty-seven ❛❛❜s and twenty-seven ❛❜❜s
+Count differences (expected - actual):
+{',': 6, 'u': 1, 'g': 1, 'l': -6, 'i': -9, 'y': 2, 'w': 1, 'e': -33, 't': -26, 'o': 2, 'h': 4, 's': 7, 'T': 0, 'a': 0, 'd': 0, 'v': 2, 'r': 5, ':': 0, 'x': -2, '❜': 6, 'c': 0, 'm': 0, 'n': 1, '-': 2, '❛': 6, 'f': -4}
 """
