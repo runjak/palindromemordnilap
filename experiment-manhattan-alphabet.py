@@ -36,6 +36,7 @@ def experiment_alphabet():
     problem = pulp.LpProblem(name="Experiment_alphabet", sense=pulp.LpMinimize)
 
     manhattan_pairs = []
+    additional_constraints = []
     for letter, choices in variables.items():
         weighted_choice = sum(
             [weight * variable for variable, weight in choices.items()]
@@ -45,7 +46,10 @@ def experiment_alphabet():
         comma_correction = 0
         if letter == ",":
             # comma correction should be set to the sum of all variables minus two
-            comma_correction = (
+            comma_variable = pulp.LpVariable(
+                name="comma-correction", lowBound=0, cat=pulp.LpInteger
+            )
+            additional_constraints.append(
                 sum(
                     [
                         variable
@@ -55,7 +59,9 @@ def experiment_alphabet():
                     ]
                 )
                 - 2
+                <= comma_variable
             )
+            comma_correction = comma_variable
 
         manhattan_pairs.append(
             (lower_bounds[letter] + offset_sum + comma_correction, weighted_choice)
@@ -63,7 +69,7 @@ def experiment_alphabet():
 
     manhattan_goal, manhattan_constraints = manhattan(manhattan_pairs)
     problem += manhattan_goal
-    for constraint in manhattan_constraints:
+    for constraint in manhattan_constraints + additional_constraints:
         problem += constraint
 
     for letter, choices in variables.items():
@@ -121,4 +127,14 @@ twelve ❛w❜s, three ❛x❜s, seven ❛y❜s, twenty-seven ❛❛❜s and twe
 Count differences (expected - actual):
 {'-': 3, 'n': 2, 'v': -7, 'm': 0, '❜': 7, 'a': 0, 't': -26, 's': -26, 'l': 2, 'h': 3, 'e': -33, ':': 0,
  'y': 3, 'x': 1, 'c': 0, 'f': -3, 'i': -8, 'g': 0, 'w': 1, 'd': 0, 'o': 3, ',': 7, 'u': -1, 'r': 6, '❛': 7, 'T': 0}
+
+Adding another help variable led to this:
+---
+This text contains the following letters:
+twenty-nine ❛,❜s, seven ❛-❜s, two ❛:❜s, two ❛T❜s, three ❛a❜s, one ❛b❜s, two ❛c❜s, two ❛d❜s,
+thirty-seven ❛e❜s, three ❛f❜s, five ❛g❜s, twelve ❛h❜s, six ❛l❜s, twenty ❛n❜s, nine ❛o❜s, eight ❛r❜s,
+thirty-seven ❛s❜s, eight ❛v❜s, eleven ❛w❜s, six ❛x❜s, eight ❛y❜s, twenty-six ❛❛❜s and twenty-six ❛❜❜s
+Count differences (expected - actual):
+{'❛': 2, 'T': 0, 's': 3, 'h': 2, 'f': 0, 'g': 0, 'd': 0, '❜': 2, 'v': 1, 'b': 0, 'o': 0, 'i': -15,
+ 'r': 2, ',': 7, 'l': 0, 'e': 6, 't': -28, 'c': 0, 'w': 0, 'y': 1, 'n': 2, 'x': 0, '-': 1, 'a': 0, ':': 0}
 """
