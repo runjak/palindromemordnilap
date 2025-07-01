@@ -102,3 +102,13 @@ Count differences (expected - actual):
  'c': 0, 'm': 0,
  'a': -1}
 """
+
+"""
+Notable problems:
+
+I see the following issues:
+- We disregard the 'and'.
+- We disregard the ',' separators.
+- We don't include all chars in our starting alphabet - such as 'v'.
+- Maybe there's more
+"""
