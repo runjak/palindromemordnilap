@@ -42,8 +42,24 @@ def experiment_alphabet():
         )
 
         offset_sum = sum([weight * variable for weight, variable in offsets[letter]])
-        # FIXME count commas
-        manhattan_pairs.append((lower_bounds[letter] + offset_sum, weighted_choice))
+        comma_correction = 0
+        if letter == ",":
+            # comma correction should be set to the sum of all variables minus two
+            comma_correction = (
+                sum(
+                    [
+                        variable
+                        for letter in letters
+                        for (variable, count) in variables[letter].items()
+                        if count != 0
+                    ]
+                )
+                - 2
+            )
+
+        manhattan_pairs.append(
+            (lower_bounds[letter] + offset_sum + comma_correction, weighted_choice)
+        )
 
     manhattan_goal, manhattan_constraints = manhattan(manhattan_pairs)
     problem += manhattan_goal
@@ -95,4 +111,14 @@ ten ❛w❜s, six ❛x❜s, six ❛y❜s, twenty-five ❛❛❜s and twenty-five
 Count differences (expected - actual):
 {'❛': 0, 'y': 0, 'o': 0, 's': 0, ':': 0, 'n': 0, 'd': 0, 't': 0, 'a': 0, 'l': 0, 'g': 0, 'x': 0,
  ',': -22, 'c': 0, 'v': 0, 'h': 0, '-': 0, 'T': 0, '❜': 0, 'i': 0, 'u': 0, 'w': 0, 'e': 0, 'r': 0, 'f': 0}
+
+Introducing comma correction broke it like this:
+---
+This text contains the following letters:
+twenty-five ❛,❜s, seven ❛-❜s, two ❛:❜s, two ❛T❜s, three ❛a❜s, two ❛c❜s, two ❛d❜s,
+four ❛g❜s, twelve ❛h❜s, eight ❛l❜s, one ❛m❜s, eighteen ❛n❜s, thirteen ❛o❜s, thirteen ❛r❜s,
+twelve ❛w❜s, three ❛x❜s, seven ❛y❜s, twenty-seven ❛❛❜s and twenty-seven ❛❜❜s
+Count differences (expected - actual):
+{'-': 3, 'n': 2, 'v': -7, 'm': 0, '❜': 7, 'a': 0, 't': -26, 's': -26, 'l': 2, 'h': 3, 'e': -33, ':': 0,
+ 'y': 3, 'x': 1, 'c': 0, 'f': -3, 'i': -8, 'g': 0, 'w': 1, 'd': 0, 'o': 3, ',': 7, 'u': -1, 'r': 6, '❛': 7, 'T': 0}
 """
