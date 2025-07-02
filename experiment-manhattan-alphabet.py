@@ -28,8 +28,10 @@ def experiment_alphabet():
 
     for letter, choices in variables.items():
         for variable, count in choices.items():
-            implied_offset = count_chars(spell_char(letter, count)).items()
-            for offset_letter, offset_count in implied_offset:
+            implied_offset = count_chars(spell_char(letter, count))
+            if count > 0:
+                implied_offset[","] = 1 + implied_offset.get(",", 0)
+            for offset_letter, offset_count in implied_offset.items():
                 if offset_letter in offsets:
                     offsets[offset_letter].append((offset_count, variable))
 
@@ -41,27 +43,8 @@ def experiment_alphabet():
         weighted_choice = sum(
             [weight * variable for variable, weight in choices.items()]
         )
-
         offset_sum = sum([weight * variable for weight, variable in offsets[letter]])
-        comma_correction = 0
-        if letter == ",":
-            # comma correction should be set to the sum of all variables minus two
-            comma_variable = pulp.LpVariable(
-                name="comma-correction", lowBound=0, cat=pulp.LpInteger
-            )
-            additional_constraints.append(
-                sum(
-                    [
-                        variable
-                        for letter in letters
-                        for (variable, count) in variables[letter].items()
-                        if count != 0
-                    ]
-                )
-                - 2
-                <= comma_variable
-            )
-            comma_correction = comma_variable
+        comma_correction = 0 if letter != "," else 2
 
         manhattan_pairs.append(
             (lower_bounds[letter] + offset_sum + comma_correction, weighted_choice)
@@ -137,4 +120,13 @@ thirty-seven ❛s❜s, eight ❛v❜s, eleven ❛w❜s, six ❛x❜s, eight ❛y
 Count differences (expected - actual):
 {'❛': 2, 'T': 0, 's': 3, 'h': 2, 'f': 0, 'g': 0, 'd': 0, '❜': 2, 'v': 1, 'b': 0, 'o': 0, 'i': -15,
  'r': 2, ',': 7, 'l': 0, 'e': 6, 't': -28, 'c': 0, 'w': 0, 'y': 1, 'n': 2, 'x': 0, '-': 1, 'a': 0, ':': 0}
+
+With this mornings idea:
+---
+This text contains the following letters:
+twenty-nine ❛,❜s, seven ❛-❜s, two ❛:❜s, two ❛T❜s, three ❛a❜s, two ❛c❜s, two ❛d❜s, thirty-four ❛e❜s,
+four ❛g❜s, six ❛l❜s, one ❛m❜s, twenty ❛n❜s, thirty-seven ❛s❜s, thirty-four ❛t❜s, six ❛u❜s, eight ❛v❜s,
+twelve ❛w❜s, four ❛x❜s, eight ❛y❜s, twenty-seven ❛❛❜s and twenty-seven ❛❜❜s
+Count differences (expected - actual):
+{'n': 4, 'u': 1, 'x': 0, 'c': 0, 't': 5, 's': 6, '-': 0, ':': 0, 'a': 0, 'd': 0, 'r': -9, '❛': 5, 'o': -12, 'e': 9, 'g': 0, '❜': 5, 'v': 2, 'l': 1, 'T': 0, ',': 9, 'f': -5, 'w': 1, 'm': 0, 'y': 0, 'i': -11, 'h': -8}
 """
