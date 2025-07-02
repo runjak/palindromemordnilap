@@ -29,8 +29,6 @@ def experiment_alphabet():
     for letter, choices in variables.items():
         for variable, count in choices.items():
             implied_offset = count_chars(spell_char(letter, count))
-            if count > 0:
-                implied_offset[","] = 1 + implied_offset.get(",", 0)
             for offset_letter, offset_count in implied_offset.items():
                 if offset_letter in offsets:
                     offsets[offset_letter].append((offset_count, variable))
@@ -44,11 +42,8 @@ def experiment_alphabet():
             [weight * variable for variable, weight in choices.items()]
         )
         offset_sum = sum([weight * variable for weight, variable in offsets[letter]])
-        comma_correction = 0 if letter != "," else 2
 
-        manhattan_pairs.append(
-            (lower_bounds[letter] + offset_sum + comma_correction, weighted_choice)
-        )
+        manhattan_pairs.append((lower_bounds[letter] + offset_sum, weighted_choice))
 
     manhattan_goal, manhattan_constraints = manhattan(manhattan_pairs)
     problem += manhattan_goal
@@ -100,33 +95,4 @@ ten ❛w❜s, six ❛x❜s, six ❛y❜s, twenty-five ❛❛❜s and twenty-five
 Count differences (expected - actual):
 {'❛': 0, 'y': 0, 'o': 0, 's': 0, ':': 0, 'n': 0, 'd': 0, 't': 0, 'a': 0, 'l': 0, 'g': 0, 'x': 0,
  ',': -22, 'c': 0, 'v': 0, 'h': 0, '-': 0, 'T': 0, '❜': 0, 'i': 0, 'u': 0, 'w': 0, 'e': 0, 'r': 0, 'f': 0}
-
-Introducing comma correction broke it like this:
----
-This text contains the following letters:
-twenty-five ❛,❜s, seven ❛-❜s, two ❛:❜s, two ❛T❜s, three ❛a❜s, two ❛c❜s, two ❛d❜s,
-four ❛g❜s, twelve ❛h❜s, eight ❛l❜s, one ❛m❜s, eighteen ❛n❜s, thirteen ❛o❜s, thirteen ❛r❜s,
-twelve ❛w❜s, three ❛x❜s, seven ❛y❜s, twenty-seven ❛❛❜s and twenty-seven ❛❜❜s
-Count differences (expected - actual):
-{'-': 3, 'n': 2, 'v': -7, 'm': 0, '❜': 7, 'a': 0, 't': -26, 's': -26, 'l': 2, 'h': 3, 'e': -33, ':': 0,
- 'y': 3, 'x': 1, 'c': 0, 'f': -3, 'i': -8, 'g': 0, 'w': 1, 'd': 0, 'o': 3, ',': 7, 'u': -1, 'r': 6, '❛': 7, 'T': 0}
-
-Adding another help variable led to this:
----
-This text contains the following letters:
-twenty-nine ❛,❜s, seven ❛-❜s, two ❛:❜s, two ❛T❜s, three ❛a❜s, one ❛b❜s, two ❛c❜s, two ❛d❜s,
-thirty-seven ❛e❜s, three ❛f❜s, five ❛g❜s, twelve ❛h❜s, six ❛l❜s, twenty ❛n❜s, nine ❛o❜s, eight ❛r❜s,
-thirty-seven ❛s❜s, eight ❛v❜s, eleven ❛w❜s, six ❛x❜s, eight ❛y❜s, twenty-six ❛❛❜s and twenty-six ❛❜❜s
-Count differences (expected - actual):
-{'❛': 2, 'T': 0, 's': 3, 'h': 2, 'f': 0, 'g': 0, 'd': 0, '❜': 2, 'v': 1, 'b': 0, 'o': 0, 'i': -15,
- 'r': 2, ',': 7, 'l': 0, 'e': 6, 't': -28, 'c': 0, 'w': 0, 'y': 1, 'n': 2, 'x': 0, '-': 1, 'a': 0, ':': 0}
-
-With this mornings idea:
----
-This text contains the following letters:
-twenty-nine ❛,❜s, seven ❛-❜s, two ❛:❜s, two ❛T❜s, three ❛a❜s, two ❛c❜s, two ❛d❜s, thirty-four ❛e❜s,
-four ❛g❜s, six ❛l❜s, one ❛m❜s, twenty ❛n❜s, thirty-seven ❛s❜s, thirty-four ❛t❜s, six ❛u❜s, eight ❛v❜s,
-twelve ❛w❜s, four ❛x❜s, eight ❛y❜s, twenty-seven ❛❛❜s and twenty-seven ❛❜❜s
-Count differences (expected - actual):
-{'n': 4, 'u': 1, 'x': 0, 'c': 0, 't': 5, 's': 6, '-': 0, ':': 0, 'a': 0, 'd': 0, 'r': -9, '❛': 5, 'o': -12, 'e': 9, 'g': 0, '❜': 5, 'v': 2, 'l': 1, 'T': 0, ',': 9, 'f': -5, 'w': 1, 'm': 0, 'y': 0, 'i': -11, 'h': -8}
 """
